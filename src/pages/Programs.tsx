@@ -1,71 +1,46 @@
+import { useEffect, useState } from 'react';
 import Navigation from "@/components/ui/navigation";
 import Footer from "@/components/ui/footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExternalLink } from "lucide-react";
+import { ExternalLink, Calendar, Users } from "lucide-react";
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from '@/hooks/use-toast';
+
+interface Program {
+  id: string;
+  name: string;
+  website: string;
+  description: string;
+}
 
 const Programs = () => {
-  const programs = [
-    { 
-      name: "World Scholars Cup", 
-      website: "https://www.worldscholarscup.org/",
-      description: "An international academic program that brings together students from around the world to discuss and debate current issues."
-    },
-    { 
-      name: "Speech and Debate", 
-      website: "https://www.speechanddebate.org/",
-      description: "Developing critical thinking and communication skills through competitive speech and debate tournaments."
-    },
-    { 
-      name: "Mock Trial", 
-      website: "https://www.constitutionalrights.org/",
-      description: "Students learn about the legal system by participating in mock courtroom proceedings."
-    },
-    { 
-      name: "Science Olympiad", 
-      website: "https://www.soinc.org/",
-      description: "Science competition that emphasizes hands-on learning and real-world problem solving."
-    },
-    { 
-      name: "Quiz Bowl", 
-      website: "https://www.naqt.com/",
-      description: "Academic competition featuring questions from various subjects including literature, science, and history."
-    },
-    { 
-      name: "Model UN", 
-      website: "https://www.nmun.org/",
-      description: "Students simulate United Nations committees to learn about diplomacy and international relations."
-    },
-    { 
-      name: "Skills USA", 
-      website: "https://www.skillsusa.org/",
-      description: "Career and technical education organization helping students develop technical and leadership skills."
-    },
-    { 
-      name: "UNICEF Club", 
-      website: "https://www.unicefusa.org/",
-      description: "Students advocate for children's rights and participate in humanitarian service projects."
-    },
-    { 
-      name: "Women in STEM", 
-      website: "https://www.womeninstem.org/",
-      description: "Empowering young women to pursue careers in science, technology, engineering, and mathematics."
-    },
-    { 
-      name: "Scholastic Art and Writing", 
-      website: "https://www.artandwriting.org/",
-      description: "Recognizing creative teenagers through the nation's longest-running writing and art competition."
-    },
-    { 
-      name: "AMSA (American Medical Students Association)", 
-      website: "https://www.amsa.org/",
-      description: "Preparing students for careers in medicine through education and advocacy."
-    },
-    { 
-      name: "Brain Bee", 
-      website: "https://www.brainfacts.org/",
-      description: "Neuroscience competition that motivates students to learn about the brain and neuroscience careers."
-    },
-  ];
+  const [programs, setPrograms] = useState<Program[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetchPrograms();
+  }, []);
+
+  const fetchPrograms = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('programs')
+        .select('*')
+        .order('name');
+
+      if (error) throw error;
+      setPrograms(data || []);
+    } catch (error: any) {
+      console.error('Error fetching programs:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load programs.",
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background">
@@ -83,29 +58,51 @@ const Programs = () => {
         </div>
 
         {/* Programs Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {programs.map((program, index) => (
-            <Card key={index} className="h-full hover:shadow-lg transition-all duration-300 border-2 border-primary/10 hover:border-primary/30">
-              <CardContent className="p-6 h-full flex flex-col">
-                <div className="flex-1">
-                  <h3 className="text-xl font-bold text-primary mb-3">{program.name}</h3>
-                  <p className="text-muted-foreground mb-4 leading-relaxed">
-                    {program.description}
-                  </p>
-                </div>
-                <a 
-                  href={program.website} 
-                  target="_blank" 
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center text-accent-gold hover:text-primary transition-colors font-medium group"
-                >
-                  Visit Program Website
-                  <ExternalLink className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </a>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        {loading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
+              <p className="text-muted-foreground">Loading programs...</p>
+            </div>
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {programs.map((program) => (
+              <Card key={program.id} className="h-full hover:shadow-lg transition-all duration-300 border-2 border-primary/10 hover:border-primary/30 cursor-pointer group">
+                <CardContent className="p-6 h-full flex flex-col">
+                  <div className="flex-1">
+                    <h3 className="text-xl font-bold text-primary mb-3 group-hover:text-accent-gold transition-colors">
+                      {program.name}
+                    </h3>
+                    <p className="text-muted-foreground mb-4 leading-relaxed">
+                      {program.description}
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <a 
+                      href={`/programs/${encodeURIComponent(program.name)}`}
+                      className="inline-flex items-center text-primary hover:text-accent-gold transition-colors font-medium group"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Users className="mr-2 h-4 w-4" />
+                      View Program Details
+                    </a>
+                    <a 
+                      href={program.website} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center text-accent-gold hover:text-primary transition-colors font-medium group"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      Visit Official Website
+                      <ExternalLink className="ml-2 h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                    </a>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        )}
 
         {/* Call to Action */}
         <div className="mt-16 text-center">

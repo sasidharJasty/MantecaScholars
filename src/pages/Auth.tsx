@@ -26,7 +26,8 @@ const Auth = () => {
     password: '',
     confirmPassword: '',
     firstName: '',
-    lastName: ''
+    lastName: '',
+    memberId: ''
   });
 
   useEffect(() => {
@@ -100,10 +101,10 @@ const Auth = () => {
         variant: "destructive"
       });
     } else {
-      setMessage('Check your email to confirm your account.');
+      setMessage('Your account has been created and is pending approval. You will receive an email when your account is approved.');
       toast({
         title: "Account Created",
-        description: "Check your email to confirm your account."
+        description: "Your account is pending administrator approval. You will receive an email notification once approved."
       });
     }
     
@@ -231,6 +232,7 @@ const Auth = () => {
                         name="firstName"
                         value={formData.firstName}
                         onChange={handleInputChange}
+                        required
                       />
                     </div>
                     <div>
@@ -240,11 +242,22 @@ const Auth = () => {
                         name="lastName"
                         value={formData.lastName}
                         onChange={handleInputChange}
+                        required
                       />
                     </div>
                   </div>
                   <div>
-                    <Label htmlFor="email">Email</Label>
+                    <Label htmlFor="memberId">MS ID (if assigned)</Label>
+                    <Input
+                      id="memberId"
+                      name="memberId"
+                      value={formData.memberId}
+                      onChange={handleInputChange}
+                      placeholder="Leave blank if not yet assigned"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="email">Email Address</Label>
                     <Input
                       id="email"
                       name="email"
@@ -276,6 +289,9 @@ const Auth = () => {
                       onChange={handleInputChange}
                       required
                     />
+                  </div>
+                  <div className="text-sm text-muted-foreground bg-accent p-3 rounded-md">
+                    Note: Your account will require administrator approval before you can sign in.
                   </div>
                   <Button type="submit" className="w-full" disabled={isLoading}>
                     {isLoading ? 'Creating Account...' : 'Create Account'}

@@ -10,6 +10,8 @@ export interface Profile {
   first_name?: string;
   last_name?: string;
   role: UserRole;
+  member_id?: string | null;
+  account_status?: string | null;
   created_at: string;
   updated_at: string;
 }

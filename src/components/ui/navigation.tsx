@@ -33,11 +33,21 @@ const Navigation = () => {
     { path: "/about", label: "About Us" },
     { path: "/programs", label: "Our Programs" },
     { path: "/team", label: "Our Team" },
+    { path: "/donate", label: "Donate" },
+    { path: "/contact", label: "Contact" },
   ];
 
-  // Add admin item for authenticated admins
+  // Add member dashboard for authenticated members
+  if (user && profile?.account_status === 'approved' && !isAdmin()) {
+    navItems.push({ path: "/dashboard", label: "Dashboard" });
+  }
+
+  // Add admin items for authenticated admins
   if (user && isAdmin()) {
     navItems.push({ path: "/admin", label: "Admin" });
+    if (profile?.role === 'admin_ii' || profile?.role === 'admin_iii') {
+      navItems.push({ path: "/admin/approvals", label: "Approvals" });
+    }
   }
 
   return (

@@ -113,33 +113,94 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string | null
           created_at: string | null
           email: string
           first_name: string | null
           id: string
           last_name: string | null
+          member_id: string | null
           role: Database["public"]["Enums"]["user_role"] | null
           updated_at: string | null
         }
         Insert: {
+          account_status?: string | null
           created_at?: string | null
           email: string
           first_name?: string | null
           id: string
           last_name?: string | null
+          member_id?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
         Update: {
+          account_status?: string | null
           created_at?: string | null
           email?: string
           first_name?: string | null
           id?: string
           last_name?: string | null
+          member_id?: string | null
           role?: Database["public"]["Enums"]["user_role"] | null
           updated_at?: string | null
         }
         Relationships: []
+      }
+      program_announcements: {
+        Row: {
+          content: string
+          created_at: string | null
+          created_by: string
+          id: string
+          program_id: string
+          target_user_id: string | null
+          title: string
+          updated_at: string | null
+        }
+        Insert: {
+          content: string
+          created_at?: string | null
+          created_by: string
+          id?: string
+          program_id: string
+          target_user_id?: string | null
+          title: string
+          updated_at?: string | null
+        }
+        Update: {
+          content?: string
+          created_at?: string | null
+          created_by?: string
+          id?: string
+          program_id?: string
+          target_user_id?: string | null
+          title?: string
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "program_announcements_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_announcements_program_id_fkey"
+            columns: ["program_id"]
+            isOneToOne: false
+            referencedRelation: "programs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "program_announcements_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       programs: {
         Row: {

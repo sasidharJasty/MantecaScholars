@@ -8,6 +8,8 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/AuthContext';
 import { toast } from '@/hooks/use-toast';
+import Navigation from '@/components/ui/navigation';
+import { GraduationCap } from 'lucide-react';
 
 const Auth = () => {
   const [searchParams] = useSearchParams();
@@ -146,19 +148,30 @@ const Auth = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4">
-      <div className="w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-primary mb-2">Manteca Scholars</h1>
-          <p className="text-muted-foreground italic">"Egredere et vince" - Step forward and conquer</p>
-        </div>
+    <>
+      <Navigation />
+      <div className="min-h-[calc(100vh-4rem)] bg-gradient-to-br from-background via-accent/20 to-background flex items-center justify-center px-4 py-12">
+        <div className="w-full max-w-md">
+          <div className="text-center mb-8 space-y-4">
+            <div className="flex justify-center">
+              <div className="bg-gradient-to-br from-primary to-primary-hover p-4 rounded-2xl shadow-lg">
+                <GraduationCap className="w-12 h-12 text-primary-foreground" />
+              </div>
+            </div>
+            <div>
+              <h1 className="text-4xl font-bold bg-gradient-to-r from-primary to-primary-hover bg-clip-text text-transparent mb-2">
+                Manteca Scholars
+              </h1>
+              <p className="text-muted-foreground italic text-lg">"Egredere et vince" - Step forward and conquer</p>
+            </div>
+          </div>
 
-        <Card>
-          <CardHeader className="text-center">
-            <CardTitle>Welcome</CardTitle>
-            <CardDescription>Sign in to your account or create a new one</CardDescription>
-          </CardHeader>
-          <CardContent>
+          <Card className="shadow-xl border-border/50 backdrop-blur-sm bg-card/95">
+            <CardHeader className="text-center pb-4">
+              <CardTitle className="text-2xl">Welcome</CardTitle>
+              <CardDescription>Sign in to your account or create a new one</CardDescription>
+            </CardHeader>
+            <CardContent>
             {error && (
               <Alert variant="destructive" className="mb-4">
                 <AlertDescription>{error}</AlertDescription>
@@ -292,8 +305,13 @@ const Auth = () => {
             </Tabs>
           </CardContent>
         </Card>
+        
+        <p className="text-center text-sm text-muted-foreground mt-6">
+          By signing up, you agree to our terms of service and privacy policy
+        </p>
       </div>
     </div>
+    </>
   );
 };
 

@@ -3,9 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface PendingUser {
@@ -17,10 +18,16 @@ interface PendingUser {
   created_at: string;
 }
 
+interface UserApproval {
+  userId: string;
+  role: 'student' | 'admin_i' | 'admin_ii' | 'admin_iii';
+}
+
 const AdminApprovals = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
+  const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -55,26 +62,62 @@ const AdminApprovals = () => {
   };
 
   const handleApproval = async (userId: string, approved: boolean) => {
+    if (!approved) {
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({ account_status: 'rejected' })
+          .eq('id', userId);
+
+        if (error) throw error;
+
+        toast({
+          title: "Account Rejected",
+          description: "The account has been rejected."
+        });
+
+        fetchPendingUsers();
+      } catch (error: any) {
+        console.error('Error rejecting account:', error);
+        toast({
+          title: "Error",
+          description: "Failed to reject account.",
+          variant: "destructive"
+        });
+      }
+      return;
+    }
+
+    const role = selectedRoles[userId] || 'student';
+
     try {
-      const { error } = await supabase
+      // Update account status
+      const { error: profileError } = await supabase
         .from('profiles')
-        .update({ account_status: approved ? 'approved' : 'rejected' })
+        .update({ account_status: 'approved' })
         .eq('id', userId);
 
-      if (error) throw error;
+      if (profileError) throw profileError;
+
+      // Update user role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .update({ role: role as any })
+        .eq('user_id', userId);
+
+      if (roleError) throw roleError;
 
       toast({
-        title: approved ? "Account Approved" : "Account Rejected",
-        description: `The account has been ${approved ? 'approved' : 'rejected'}.`
+        title: "Account Approved",
+        description: `User has been approved as ${role.replace('_', ' ').toUpperCase()}.`,
       });
 
-      // Refresh the list
       fetchPendingUsers();
     } catch (error: any) {
-      console.error('Error updating account status:', error);
+      console.error('Error approving account:', error);
       toast({
         title: "Error",
-        description: "Failed to update account status.",
+        description: "Failed to approve account.",
         variant: "destructive"
       });
     }
@@ -138,11 +181,33 @@ const AdminApprovals = () => {
                       </div>
                     </CardHeader>
                     <CardContent>
-                      <div className="mb-4">
+                      <div className="mb-4 space-y-3">
                         <p className="text-sm text-muted-foreground">
                           <span className="font-medium">Member ID:</span>{' '}
                           {user.member_id || 'Not provided'}
                         </p>
+                        <div className="space-y-2">
+                          <label className="text-sm font-medium flex items-center gap-2">
+                            <Shield className="w-4 h-4 text-primary" />
+                            Assign Role
+                          </label>
+                          <Select
+                            value={selectedRoles[user.id] || 'student'}
+                            onValueChange={(value) => 
+                              setSelectedRoles(prev => ({ ...prev, [user.id]: value }))
+                            }
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Select role" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="student">Student</SelectItem>
+                              <SelectItem value="admin_i">Admin Level I</SelectItem>
+                              <SelectItem value="admin_ii">Admin Level II</SelectItem>
+                              <SelectItem value="admin_iii">Admin Level III</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
                       </div>
                       <div className="flex gap-3">
                         <Button

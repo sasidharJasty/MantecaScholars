@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Navigation from '@/components/ui/navigation';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Users, GraduationCap } from 'lucide-react';
+import { Calendar, Users, GraduationCap, Bell, Crown, TrendingUp } from 'lucide-react';
 import Footer from '@/components/ui/footer';
 import { toast } from '@/hooks/use-toast';
 
@@ -12,6 +13,7 @@ interface ProgramInfo {
   program_id: string;
   program_name: string;
   program_website: string | null;
+  is_team_leader: boolean;
 }
 
 interface Event {
@@ -23,11 +25,27 @@ interface Event {
   program_name: string;
 }
 
+interface Announcement {
+  id: string;
+  title: string;
+  content: string;
+  created_at: string;
+  program_name: string;
+}
+
+interface Stats {
+  totalPrograms: number;
+  upcomingEvents: number;
+  unreadAnnouncements: number;
+}
+
 const Dashboard = () => {
   const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
+  const [stats, setStats] = useState<Stats>({ totalPrograms: 0, upcomingEvents: 0, unreadAnnouncements: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -68,7 +86,8 @@ const Dashboard = () => {
       const programsList = rostersData?.map((r: any) => ({
         program_id: r.program_id,
         program_name: r.programs?.name || 'Unknown Program',
-        program_website: r.programs?.website
+        program_website: r.programs?.website,
+        is_team_leader: r.is_team_leader || false
       })) || [];
 
       setPrograms(programsList);
@@ -107,6 +126,40 @@ const Dashboard = () => {
         })) || [];
 
         setEvents(eventsList);
+
+        // Fetch announcements
+        const { data: announcementsData, error: announcementsError } = await supabase
+          .from('program_announcements')
+          .select(`
+            id,
+            title,
+            content,
+            created_at,
+            program_id,
+            programs:program_id (name)
+          `)
+          .in('program_id', programIds)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (announcementsError) throw announcementsError;
+
+        const announcementsList = announcementsData?.map((a: any) => ({
+          id: a.id,
+          title: a.title,
+          content: a.content,
+          created_at: a.created_at,
+          program_name: a.programs?.name || 'Unknown Program'
+        })) || [];
+
+        setAnnouncements(announcementsList);
+
+        // Set stats
+        setStats({
+          totalPrograms: programsList.length,
+          upcomingEvents: eventsList.length,
+          unreadAnnouncements: announcementsList.length
+        });
       }
     } catch (error: any) {
       console.error('Error fetching dashboard data:', error);
@@ -162,6 +215,42 @@ const Dashboard = () => {
               </div>
             </div>
 
+            {/* Stats Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <Card className="border-primary/10 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">My Programs</CardTitle>
+                  <GraduationCap className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.totalPrograms}</div>
+                  <p className="text-xs text-muted-foreground">Enrolled programs</p>
+                </CardContent>
+              </Card>
+              
+              <Card className="border-primary/10 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
+                  <Calendar className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.upcomingEvents}</div>
+                  <p className="text-xs text-muted-foreground">Events scheduled</p>
+                </CardContent>
+              </Card>
+
+              <Card className="border-primary/10 bg-card/80 backdrop-blur-sm">
+                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                  <CardTitle className="text-sm font-medium">Announcements</CardTitle>
+                  <Bell className="h-4 w-4 text-primary" />
+                </CardHeader>
+                <CardContent>
+                  <div className="text-2xl font-bold">{stats.unreadAnnouncements}</div>
+                  <p className="text-xs text-muted-foreground">Recent updates</p>
+                </CardContent>
+              </Card>
+            </div>
+
             <div className="grid md:grid-cols-2 gap-8 mb-8">
               <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
                 <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
@@ -181,7 +270,15 @@ const Dashboard = () => {
                           key={program.program_id}
                           className="p-3 bg-accent rounded-lg border border-border hover:bg-accent/80 transition-colors"
                         >
-                          <h3 className="font-semibold text-foreground">{program.program_name}</h3>
+                          <div className="flex items-center justify-between">
+                            <h3 className="font-semibold text-foreground">{program.program_name}</h3>
+                            {program.is_team_leader && (
+                              <Badge variant="secondary" className="bg-primary/10">
+                                <Crown className="w-3 h-3 mr-1" />
+                                Team Leader
+                              </Badge>
+                            )}
+                          </div>
                           {program.program_website && (
                             <a
                               href={program.program_website}
@@ -230,17 +327,18 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
-              <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Calendar className="w-6 h-6 text-primary" />
+            <div className="grid md:grid-cols-2 gap-8">
+              <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
+                <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Calendar className="w-6 h-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl">Upcoming Events</CardTitle>
                   </div>
-                  <CardTitle className="text-xl">Upcoming Events</CardTitle>
-                </div>
-                <CardDescription>Your schedule for the coming days</CardDescription>
-              </CardHeader>
-              <CardContent>
+                  <CardDescription>Your schedule for the coming days</CardDescription>
+                </CardHeader>
+                <CardContent>
                 {events.length > 0 ? (
                   <div className="space-y-3">
                     {events.map((event) => (
@@ -271,6 +369,42 @@ const Dashboard = () => {
                 )}
               </CardContent>
             </Card>
+
+            <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
+              <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Bell className="w-6 h-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Announcements</CardTitle>
+                </div>
+                <CardDescription>Latest updates from your programs</CardDescription>
+              </CardHeader>
+              <CardContent>
+                {announcements.length > 0 ? (
+                  <div className="space-y-3">
+                    {announcements.map((announcement) => (
+                      <div
+                        key={announcement.id}
+                        className="p-4 bg-accent rounded-lg border border-border hover:bg-accent/80 transition-colors"
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h3 className="font-semibold text-foreground">{announcement.title}</h3>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(announcement.created_at).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground mb-2">{announcement.content}</p>
+                        <span className="text-xs text-primary">{announcement.program_name}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-muted-foreground">No recent announcements.</p>
+                )}
+              </CardContent>
+            </Card>
+            </div>
           </div>
         </div>
       </div>

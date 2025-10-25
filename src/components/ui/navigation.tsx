@@ -48,6 +48,9 @@ const Navigation = () => {
     if (profile?.role === 'admin_ii' || profile?.role === 'admin_iii') {
       navItems.push({ path: "/admin/approvals", label: "Approvals" });
     }
+    if (profile?.role === 'admin_iii') {
+      navItems.push({ path: "/admin/users", label: "Users" });
+    }
   }
 
   return (

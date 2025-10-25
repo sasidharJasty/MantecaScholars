@@ -60,6 +60,42 @@ export type Database = {
           },
         ]
       }
+      announcement_reads: {
+        Row: {
+          announcement_id: string
+          id: string
+          read_at: string | null
+          user_id: string
+        }
+        Insert: {
+          announcement_id: string
+          id?: string
+          read_at?: string | null
+          user_id: string
+        }
+        Update: {
+          announcement_id?: string
+          id?: string
+          read_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "announcement_reads_announcement_id_fkey"
+            columns: ["announcement_id"]
+            isOneToOne: false
+            referencedRelation: "program_announcements"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "announcement_reads_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       events: {
         Row: {
           created_at: string | null
@@ -232,6 +268,7 @@ export type Database = {
       rosters: {
         Row: {
           id: string
+          is_team_leader: boolean | null
           joined_at: string | null
           position: string | null
           program_id: string
@@ -239,6 +276,7 @@ export type Database = {
         }
         Insert: {
           id?: string
+          is_team_leader?: boolean | null
           joined_at?: string | null
           position?: string | null
           program_id: string
@@ -246,6 +284,7 @@ export type Database = {
         }
         Update: {
           id?: string
+          is_team_leader?: boolean | null
           joined_at?: string | null
           position?: string | null
           program_id?: string

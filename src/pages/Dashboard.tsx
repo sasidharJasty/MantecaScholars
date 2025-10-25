@@ -137,24 +137,39 @@ const Dashboard = () => {
   return (
     <>
       <Navigation />
-      <div className="min-h-screen bg-gradient-to-b from-background via-accent/10 to-background">
+      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
         <div className="container mx-auto px-4 py-16">
           <div className="max-w-6xl mx-auto">
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold text-primary mb-2">
-                Welcome, {profile?.first_name || 'Scholar'}!
-              </h1>
-              <p className="text-muted-foreground">
-                Member ID: <span className="font-medium text-foreground">{profile?.member_id || 'Not assigned'}</span>
-              </p>
+            {/* Hero Header */}
+            <div className="mb-12 relative">
+              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/5 rounded-3xl blur-3xl -z-10"></div>
+              <div className="relative bg-card/50 backdrop-blur-sm rounded-3xl p-8 border border-primary/10 shadow-xl">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent mb-3">
+                      Welcome back, {profile?.first_name || 'Scholar'}!
+                    </h1>
+                    <p className="text-lg text-muted-foreground">
+                      Member ID: <span className="font-semibold text-foreground bg-primary/10 px-3 py-1 rounded-full">{profile?.member_id || 'Not assigned'}</span>
+                    </p>
+                  </div>
+                  <div className="hidden md:block">
+                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+                      <span className="text-3xl font-bold text-white">{profile?.first_name?.charAt(0) || 'S'}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             <div className="grid md:grid-cols-2 gap-8 mb-8">
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <div className="flex items-center space-x-2">
-                    <GraduationCap className="w-6 h-6 text-primary" />
-                    <CardTitle>My Programs</CardTitle>
+              <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
+                <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <GraduationCap className="w-6 h-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl">My Programs</CardTitle>
                   </div>
                   <CardDescription>Programs you're enrolled in</CardDescription>
                 </CardHeader>
@@ -186,11 +201,13 @@ const Dashboard = () => {
                 </CardContent>
               </Card>
 
-              <Card className="shadow-lg">
-                <CardHeader>
-                  <div className="flex items-center space-x-2">
-                    <Users className="w-6 h-6 text-primary" />
-                    <CardTitle>Profile Information</CardTitle>
+              <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
+                <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
+                  <div className="flex items-center space-x-3">
+                    <div className="p-2 bg-primary/10 rounded-lg">
+                      <Users className="w-6 h-6 text-primary" />
+                    </div>
+                    <CardTitle className="text-xl">Profile Information</CardTitle>
                   </div>
                   <CardDescription>Your account details</CardDescription>
                 </CardHeader>
@@ -213,11 +230,13 @@ const Dashboard = () => {
               </Card>
             </div>
 
-            <Card className="shadow-lg">
-              <CardHeader>
-                <div className="flex items-center space-x-2">
-                  <Calendar className="w-6 h-6 text-primary" />
-                  <CardTitle>Upcoming Events</CardTitle>
+            <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
+              <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
+                <div className="flex items-center space-x-3">
+                  <div className="p-2 bg-primary/10 rounded-lg">
+                    <Calendar className="w-6 h-6 text-primary" />
+                  </div>
+                  <CardTitle className="text-xl">Upcoming Events</CardTitle>
                 </div>
                 <CardDescription>Your schedule for the coming days</CardDescription>
               </CardHeader>

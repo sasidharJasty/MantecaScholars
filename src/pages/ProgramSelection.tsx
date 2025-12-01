@@ -85,10 +85,15 @@ const ProgramSelection = () => {
       setSaving(true);
 
       // Get current assignments
-      const { data: currentRosters } = await supabase
+      const { data: currentRosters, error: fetchError } = await supabase
         .from('rosters')
         .select('program_id')
         .eq('user_id', user.id);
+
+      if (fetchError) {
+        console.error('Error fetching current rosters:', fetchError);
+        throw fetchError;
+      }
 
       const currentProgramIds = new Set(currentRosters?.map(r => r.program_id) || []);
 
@@ -108,7 +113,10 @@ const ProgramSelection = () => {
             is_team_leader: false
           })));
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Error inserting rosters:', insertError);
+          throw insertError;
+        }
       }
 
       // Remove unselected programs
@@ -119,7 +127,10 @@ const ProgramSelection = () => {
           .eq('user_id', user.id)
           .in('program_id', toRemove);
 
-        if (deleteError) throw deleteError;
+        if (deleteError) {
+          console.error('Error deleting rosters:', deleteError);
+          throw deleteError;
+        }
       }
 
       toast({
@@ -132,7 +143,7 @@ const ProgramSelection = () => {
       console.error('Error saving programs:', error);
       toast({
         title: "Error",
-        description: "Failed to save program selections.",
+        description: error.message || "Failed to save program selections.",
         variant: "destructive"
       });
     } finally {

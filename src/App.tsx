@@ -17,6 +17,7 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminPrograms from "./pages/AdminPrograms";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminUsers from "./pages/AdminUsers";
+import AdminProgramsManagement from "./pages/AdminProgramsManagement";
 import TeamLeaderDashboard from "./pages/TeamLeaderDashboard";
 import ProgramSelection from "./pages/ProgramSelection";
 import NotFound from "./pages/NotFound";
@@ -42,6 +43,7 @@ const App = () => (
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
         <Route path="/admin/programs" element={<AdminPrograms />} />
+        <Route path="/admin/my-programs" element={<AdminProgramsManagement />} />
         <Route path="/admin/approvals" element={<AdminApprovals />} />
         <Route path="/admin/users" element={<AdminUsers />} />
         <Route path="/team-leader" element={<TeamLeaderDashboard />} />

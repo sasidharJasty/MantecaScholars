@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Users, GraduationCap, Bell, Crown, TrendingUp } from 'lucide-react';
+import { Calendar, Users, GraduationCap, Bell, Crown, TrendingUp, Plus, Settings } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 import Footer from '@/components/ui/footer';
 import { toast } from '@/hooks/use-toast';
 
@@ -40,13 +41,14 @@ interface Stats {
 }
 
 const Dashboard = () => {
-  const { user, profile } = useAuth();
+  const { user, profile, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
   const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [stats, setStats] = useState<Stats>({ totalPrograms: 0, upcomingEvents: 0, unreadAnnouncements: 0 });
   const [loading, setLoading] = useState(true);
+  const [isTeamLeader, setIsTeamLeader] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -91,6 +93,10 @@ const Dashboard = () => {
       })) || [];
 
       setPrograms(programsList);
+      
+      // Check if user is a team leader for any program
+      const hasLeaderRole = programsList.some(p => p.is_team_leader);
+      setIsTeamLeader(hasLeaderRole);
 
       // Fetch upcoming events for user's programs
       const programIds = programsList.map(p => p.program_id);
@@ -206,9 +212,22 @@ const Dashboard = () => {
                       Member ID: <span className="font-semibold text-foreground bg-primary/10 px-3 py-1 rounded-full">{profile?.member_id || 'Not assigned'}</span>
                     </p>
                   </div>
-                  <div className="hidden md:block">
-                    <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-                      <span className="text-3xl font-bold text-white">{profile?.first_name?.charAt(0) || 'S'}</span>
+                  <div className="flex items-center gap-3">
+                    {isAdmin() && (
+                      <Button onClick={() => navigate('/admin')} variant="outline">
+                        Admin Panel
+                      </Button>
+                    )}
+                    {isTeamLeader && (
+                      <Button onClick={() => navigate('/team-leader')} className="bg-accent-gold text-accent-gold-foreground hover:bg-accent-gold/90">
+                        <Crown className="w-4 h-4 mr-2" />
+                        Team Leader
+                      </Button>
+                    )}
+                    <div className="hidden md:block">
+                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
+                        <span className="text-2xl font-bold text-white">{profile?.first_name?.charAt(0) || 'S'}</span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -258,9 +277,20 @@ const Dashboard = () => {
                     <div className="p-2 bg-primary/10 rounded-lg">
                       <GraduationCap className="w-6 h-6 text-primary" />
                     </div>
-                    <CardTitle className="text-xl">My Programs</CardTitle>
+                  <CardTitle className="text-xl">My Programs</CardTitle>
                   </div>
-                  <CardDescription>Programs you're enrolled in</CardDescription>
+                  <CardDescription>
+                    Programs you're enrolled in
+                    <Button 
+                      size="sm" 
+                      variant="ghost" 
+                      onClick={() => navigate('/select-programs')}
+                      className="ml-2"
+                    >
+                      <Settings className="w-3 h-3 mr-1" />
+                      Manage
+                    </Button>
+                  </CardDescription>
                 </CardHeader>
                 <CardContent>
                   {programs.length > 0 ? (
@@ -293,7 +323,13 @@ const Dashboard = () => {
                       ))}
                     </div>
                   ) : (
-                    <p className="text-muted-foreground">You are not enrolled in any programs yet.</p>
+                    <div className="text-center py-6">
+                      <p className="text-muted-foreground mb-4">You are not enrolled in any programs yet.</p>
+                      <Button onClick={() => navigate('/select-programs')}>
+                        <Plus className="w-4 h-4 mr-2" />
+                        Select Programs
+                      </Button>
+                    </div>
                   )}
                 </CardContent>
               </Card>

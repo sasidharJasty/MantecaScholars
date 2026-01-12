@@ -14,6 +14,9 @@ import Contact from "./pages/Contact";
 import Donate from "./pages/Donate";
 import Dashboard from "./pages/Dashboard";
 import AdminDashboard from "./pages/AdminDashboard";
+import AdminIDashboard from "./pages/AdminIDashboard";
+import AdminIIDashboard from "./pages/AdminIIDashboard";
+import AdminIIIDashboard from "./pages/AdminIIIDashboard";
 import AdminPrograms from "./pages/AdminPrograms";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminUsers from "./pages/AdminUsers";
@@ -42,12 +45,15 @@ const App = () => (
             <Route path="/auth" element={<Auth />} />
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/admin" element={<AdminDashboard />} />
-        <Route path="/admin/programs" element={<AdminPrograms />} />
-        <Route path="/admin/my-programs" element={<AdminProgramsManagement />} />
-        <Route path="/admin/approvals" element={<AdminApprovals />} />
-        <Route path="/admin/users" element={<AdminUsers />} />
-        <Route path="/team-leader" element={<TeamLeaderDashboard />} />
-        <Route path="/select-programs" element={<ProgramSelection />} />
+            <Route path="/admin/level-i" element={<AdminIDashboard />} />
+            <Route path="/admin/level-ii" element={<AdminIIDashboard />} />
+            <Route path="/admin/level-iii" element={<AdminIIIDashboard />} />
+            <Route path="/admin/programs" element={<AdminPrograms />} />
+            <Route path="/admin/my-programs" element={<AdminProgramsManagement />} />
+            <Route path="/admin/approvals" element={<AdminApprovals />} />
+            <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/team-leader" element={<TeamLeaderDashboard />} />
+            <Route path="/select-programs" element={<ProgramSelection />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="*" element={<NotFound />} />
           </Routes>

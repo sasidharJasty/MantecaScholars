@@ -10,11 +10,12 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, Calendar, Settings, Shield, Database, 
-  MessageCircle, Bell, Plus
+  MessageCircle, Bell, Plus, HelpCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import DirectMessages from '@/components/chat/DirectMessages';
 import ProgramChat from '@/components/chat/ProgramChat';
+import OnboardingDialog from '@/components/onboarding/OnboardingDialog';
 import {
   Select,
   SelectContent,
@@ -36,6 +37,14 @@ const AdminIDashboard = () => {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [selectedProgram, setSelectedProgram] = useState<Program | null>(null);
   const [loadingPrograms, setLoadingPrograms] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('onboarding_completed');
+    if (!hasSeenOnboarding && profile?.role === 'admin_i') {
+      setShowOnboarding(true);
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (!loading && (!user || profile?.role !== 'admin_i')) {
@@ -141,6 +150,12 @@ const AdminIDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
       <Navigation />
 
+      <OnboardingDialog 
+        open={showOnboarding} 
+        onOpenChange={setShowOnboarding} 
+        role="admin_i" 
+      />
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Header */}
         <div className="mb-12 relative">
@@ -155,7 +170,7 @@ const AdminIDashboard = () => {
                   Managing {programs.length} program{programs.length > 1 ? 's' : ''} • <span className="font-semibold text-foreground">{profile?.first_name} {profile?.last_name}</span>
                 </p>
               </div>
-              <div className="flex items-center gap-4">
+              <div className="flex items-center gap-4 flex-wrap">
                 <Select
                   value={selectedProgram?.id}
                   onValueChange={(value) => setSelectedProgram(programs.find(p => p.id === value) || null)}
@@ -171,6 +186,14 @@ const AdminIDashboard = () => {
                     ))}
                   </SelectContent>
                 </Select>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowOnboarding(true)}
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  Help
+                </Button>
                 <Badge className="bg-yellow-500 text-white px-4 py-2 text-base shadow-lg">
                   <Shield className="w-5 h-5 mr-2" />
                   Admin Level I

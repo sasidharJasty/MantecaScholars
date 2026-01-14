@@ -10,10 +10,11 @@ import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
 import { 
   Users, Calendar, Settings, Shield, Database, 
-  UserCheck, MessageCircle, Bell
+  UserCheck, MessageCircle, Bell, HelpCircle
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import DirectMessages from '@/components/chat/DirectMessages';
+import OnboardingDialog from '@/components/onboarding/OnboardingDialog';
 
 interface DashboardStats {
   totalPrograms: number;
@@ -32,6 +33,14 @@ const AdminIIDashboard = () => {
     pendingApprovals: 0
   });
   const [loadingStats, setLoadingStats] = useState(true);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+
+  useEffect(() => {
+    const hasSeenOnboarding = localStorage.getItem('onboarding_completed');
+    if (!hasSeenOnboarding && profile?.role === 'admin_ii') {
+      setShowOnboarding(true);
+    }
+  }, [profile]);
 
   useEffect(() => {
     if (!loading && (!user || profile?.role !== 'admin_ii')) {
@@ -88,12 +97,18 @@ const AdminIIDashboard = () => {
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
       <Navigation />
 
+      <OnboardingDialog 
+        open={showOnboarding} 
+        onOpenChange={setShowOnboarding} 
+        role="admin_ii" 
+      />
+
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Hero Header */}
         <div className="mb-12 relative">
           <div className="absolute inset-0 bg-gradient-to-r from-orange-500/20 to-primary/5 rounded-3xl blur-3xl -z-10"></div>
           <div className="relative bg-card/50 backdrop-blur-sm rounded-3xl p-8 border border-orange-500/20 shadow-2xl">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between flex-wrap gap-4">
               <div>
                 <h1 className="text-5xl font-bold bg-gradient-to-r from-orange-500 via-primary to-primary/60 bg-clip-text text-transparent mb-3">
                   Board Member Dashboard
@@ -102,10 +117,20 @@ const AdminIIDashboard = () => {
                   Program management & approvals • <span className="font-semibold text-foreground">{profile?.first_name} {profile?.last_name}</span>
                 </p>
               </div>
-              <Badge className="bg-orange-500 text-white px-4 py-2 text-base shadow-lg">
-                <Shield className="w-5 h-5 mr-2" />
-                Admin Level II
-              </Badge>
+              <div className="flex items-center gap-3">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  onClick={() => setShowOnboarding(true)}
+                >
+                  <HelpCircle className="w-4 h-4 mr-2" />
+                  Help Guide
+                </Button>
+                <Badge className="bg-orange-500 text-white px-4 py-2 text-base shadow-lg">
+                  <Shield className="w-5 h-5 mr-2" />
+                  Admin Level II
+                </Badge>
+              </div>
             </div>
           </div>
         </div>

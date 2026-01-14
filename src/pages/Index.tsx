@@ -5,8 +5,27 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { BookOpen, Users, Trophy, ArrowRight, Star, Target } from "lucide-react";
 import heroImage from "@/assets/hero-academic.jpg";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 const Index = () => {
+  const [programCount, setProgramCount] = useState<number>(12);
+
+  useEffect(() => {
+    const fetchProgramCount = async () => {
+      const { count } = await supabase
+        .from('programs')
+        .select('*', { count: 'exact', head: true });
+      
+      // If we have a count, update state (subtracting System Admin if needed, 
+      // but usually simple count is fine for marketing numbers)
+      if (count !== null) {
+        setProgramCount(count);
+      }
+    };
+    fetchProgramCount();
+  }, []);
+
   const newsItems = [
     {
       title: "World Scholars Cup Regional Competition Success",
@@ -29,7 +48,7 @@ const Index = () => {
     {
       icon: BookOpen,
       title: "Academic Excellence",
-      description: "12 different programs spanning science, debate, arts, and humanitarian work"
+      description: `${programCount} different programs spanning science, debate, arts, and humanitarian work`
     },
     {
       icon: Users,
@@ -133,7 +152,7 @@ const Index = () => {
                   <h3 className="text-2xl font-bold text-primary">Our Programs</h3>
                 </div>
                 <p className="text-muted-foreground mb-6 leading-relaxed">
-                  Explore our diverse range of 12+ academic programs including World Scholars Cup, 
+                  Explore our diverse range of {programCount}+ academic programs including World Scholars Cup, 
                   Mock Trial, Science Olympiad, Model UN, and more. Find the perfect program 
                   to develop your talents.
                 </p>

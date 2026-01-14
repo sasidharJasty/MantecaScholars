@@ -90,7 +90,8 @@ const Auth = () => {
       formData.email, 
       formData.password, 
       formData.firstName, 
-      formData.lastName
+      formData.lastName,
+      formData.memberId
     );
     
     if (error) {

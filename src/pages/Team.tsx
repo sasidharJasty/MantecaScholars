@@ -1,205 +1,270 @@
-import Navigation from "@/components/ui/navigation";
-import Footer from "@/components/ui/footer";
-import { Card, CardContent } from "@/components/ui/card";
-import { Mail, User } from "lucide-react";
+import { useState } from 'react';
+import Navigation from '@/components/ui/navigation';
+import Footer from '@/components/ui/footer';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { User, Mail, ChevronDown, ChevronUp } from 'lucide-react';
 
-const Team = () => {
-  const boardMembers = [
-    {
-      name: "Miles Lima",
-      title: "Founder, Chairman and Director of the Program",
-      role: "Coordinator for World Scholars Cup",
-      email: "mlima@mantecascholars.org"
-    },
-    {
-      name: "Colin Nguyen",
-      title: "Director-General",
-      role: "",
-      email: "cnguyen@mantecascholars.org"
-    },
-    {
-      name: "Aditi Malgunde",
-      title: "Director of Records and Archives",
-      role: "Coordinator for Women in STEM and AMSA",
-      email: "amalgunde@mantecascholars.org"
-    },
-    {
-      name: "Kaushik Chamchani",
-      title: "Director of Finance and Assets",
-      role: "",
-      email: "kchamchani@mantecascholars.org"
-    },
-    {
-      name: "Charlene Trinh",
-      title: "Co-Director of the Brand",
-      role: "",
-      email: "ctrinh@mantecascholars.org"
-    },
-    {
-      name: "Isabel Aquinde",
-      title: "Co-Director of the Brand",
-      role: "Coordinator for Model UN",
-      email: "iaquinde@mantecascholars.org"
-    },
-    {
-      name: "Nikitha Muruganagarajan",
-      title: "Director of Fundraising",
-      role: "Coordinator for Science Olympiad, Quiz Bowl, Skills USA, and Brain Bee",
-      email: "nmuruganagarajan@mantecascholars.org"
-    },
-    {
-      name: "Aaron Monasterio",
-      title: "Coordinator for Speech and Debate",
-      role: "",
-      email: "amonasterio@mantecascholars.org"
-    },
-    {
-      name: "Calypso Culbertson",
-      title: "Coordinator for Mock Trial",
-      role: "",
-      email: "cculbertson@mantecascholars.org"
-    },
-    {
-      name: "Nessa Jerald",
-      title: "Coordinator for UNICEF Club",
-      role: "",
-      email: "njerald@mantecascholars.org"
-    },
-    {
-      name: "Snehal Bhaira",
-      title: "Coordinator for Scholastic Art and Writing",
-      role: "",
-      email: "sbhaira@mantecascholars.org"
-    }
-  ];
+interface TeamMember {
+  name: string;
+  title: string;
+  roles?: string[];
+  email?: string;
+}
 
-  const executivePersonnel = [
-    {
-      name: "Tammana Grewal",
-      title: "Chief of Staff",
-      email: "tgrewal@mantecascholars.org"
-    },
-    {
-      name: "Shaurya Khairmode",
-      title: "Sr. Undersecretary for Parent and Family Coordination",
-      email: "skhairmode@mantecascholars.org"
-    },
-    {
-      name: "Sai Nellutla",
-      title: "Sr. Undersecretary for Student Discipline",
-      email: "snellutla@mantecascholars.org"
-    },
-    {
-      name: "Christina Addis",
-      title: "Sr. Undersecretary for Local Events",
-      email: "caddis@mantecascholars.org"
-    },
-    {
-      name: "Sasidhar Jasty",
-      title: "Sr. Undersecretary for Information Technology",
-      email: "sjasty@mantecascholars.org"
-    },
-    {
-      name: "Harshith Kumar",
-      title: "Sr. Undersecretary for Student Development",
-      email: "hkumar@mantecascholars.org"
-    },
-    {
-      name: "Abhimanyu Nair",
-      title: "Sr. Undersecretary for Corporate Relations",
-      email: "anair@mantecascholars.org"
-    },
-    {
-      name: "Sahithi Kamma",
-      title: "Sr. Undersecretary for Social Media, Administrative Support Officer",
-      email: "skamma@mantecascholars.org"
-    },
-    {
-      name: "Anjana Barath",
-      title: "Administrative Support Officer",
-      email: "abarath@mantecascholars.org"
-    },
-    {
-      name: "Saanvi Srivistava",
-      title: "Administrative Support Officer",
-      email: "ssrivistava@mantecascholars.org"
-    }
-  ];
-
-  const TeamMemberCard = ({ member }: { member: any }) => (
-    <Card className="h-full hover:shadow-lg transition-shadow border-2 border-primary/10">
-      <CardContent className="p-6">
-        <div className="flex items-center mb-4">
-          <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-hover rounded-full flex items-center justify-center mr-4">
-            <User className="h-8 w-8 text-primary-foreground" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-lg font-bold text-primary">{member.name}</h3>
-            <p className="text-sm font-medium text-accent-gold">{member.title}</p>
-            {member.role && (
-              <p className="text-xs text-muted-foreground mt-1">{member.role}</p>
-            )}
-          </div>
+const TeamMemberCard = ({ member }: { member: TeamMember }) => (
+  <Card className="bg-card/80 backdrop-blur-sm border-primary/10 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
+    <CardHeader className="pb-2">
+      <div className="flex items-start gap-4">
+        <div className="p-3 bg-gradient-to-br from-primary to-primary/60 rounded-full">
+          <User className="w-6 h-6 text-primary-foreground" />
         </div>
-        <a 
+        <div className="flex-1">
+          <CardTitle className="text-lg">{member.name}</CardTitle>
+          <p className="text-sm text-primary font-medium">{member.title}</p>
+        </div>
+      </div>
+    </CardHeader>
+    <CardContent>
+      {member.roles && member.roles.length > 0 && (
+        <div className="mb-3 space-y-1">
+          {member.roles.map((role, idx) => (
+            <p key={idx} className="text-sm text-muted-foreground">{role}</p>
+          ))}
+        </div>
+      )}
+      {member.email && (
+        <a
           href={`mailto:${member.email}`}
-          className="inline-flex items-center text-muted-foreground hover:text-primary transition-colors text-sm"
+          className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
         >
-          <Mail className="h-4 w-4 mr-2" />
+          <Mail className="w-4 h-4" />
           {member.email}
         </a>
-      </CardContent>
-    </Card>
-  );
+      )}
+    </CardContent>
+  </Card>
+);
+
+const Team = () => {
+  const [showMoreUndersecretary, setShowMoreUndersecretary] = useState(false);
+
+  const boardMembers: TeamMember[] = [
+    {
+      name: 'Miles Lima',
+      title: 'Founder, President and Director of Programs',
+      roles: ['Program Coordinator: World Scholars Cup']
+    },
+    {
+      name: 'Shaurya Khairmode',
+      title: 'Director-General',
+      roles: ['Program Coordinator: MS Clash']
+    },
+    {
+      name: 'Aditi Malgunde',
+      title: 'Director of Records and Archives',
+      roles: ['Program Coordinator: American Medical Students Association and Women in STEM']
+    },
+    {
+      name: 'Isabel Aquinde',
+      title: 'Co-Director of the Brand',
+      roles: ['Program Coordinator: Model UN']
+    },
+    {
+      name: 'Charlene Trinh',
+      title: 'Co-Director of the Brand'
+    },
+    {
+      name: 'Sagar Shah',
+      title: 'Director of Finance and Asset Management'
+    },
+    {
+      name: 'Nikitha Muruganagarajan',
+      title: 'Chief Advisor to the President; Director of Fundraising',
+      roles: ['Program Coordinator: Skills USA, Science Olympiad and Quiz Bowl']
+    },
+    {
+      name: 'Kaushik Chamchani',
+      title: 'Board Support Officer',
+      roles: ['Program Coordinator: MS Math']
+    }
+  ];
+
+  const programCoordinators: TeamMember[] = [
+    {
+      name: 'Calypso Culbertson',
+      title: 'Program Coordinator for Mock Trial'
+    },
+    {
+      name: 'Snehal Bhaira',
+      title: 'Program Coordinator for Scholastic Art and Writing'
+    }
+  ];
+
+  const undersecretariat: TeamMember[] = [
+    {
+      name: 'Sai Nellutla',
+      title: 'Sr. Undersecretary for Student Discipline',
+      roles: ['Program Coordinator for Speech and Debate']
+    },
+    {
+      name: 'Abhimanyu Nair',
+      title: 'Sr. Undersecretary for Grants and Sponsorships'
+    },
+    {
+      name: 'Harshith Kumar',
+      title: 'Sr. Undersecretary for Parent and Family Coordination'
+    },
+    {
+      name: 'Christina Addis',
+      title: 'Sr. Undersecretary for Events'
+    },
+    {
+      name: 'Nessa Jerald',
+      title: 'Sr. Undersecretary for Community Affairs'
+    },
+    {
+      name: 'Sasidhar Jasty',
+      title: 'Sr. Undersecretary for Information Technology'
+    },
+    {
+      name: 'Raunak Mahar',
+      title: 'Sr. Undersecretary for Student Development'
+    }
+  ];
+
+  const undersecretariatHidden: TeamMember[] = [
+    {
+      name: 'Prithik Karthikeyan Manopriya',
+      title: 'Sr. Undersecretary for Internal Affairs'
+    }
+  ];
+
+  const undersecretariatWithSahithi: TeamMember[] = [
+    {
+      name: 'Sahithi Kamma',
+      title: 'Sr. Undersecretary for Social Media; Administrative Support Officer'
+    }
+  ];
+
+  const administrativeSupport: TeamMember[] = [
+    {
+      name: 'Tammana Grewal',
+      title: 'Executive Assistant'
+    },
+    {
+      name: 'Anjana Barath',
+      title: 'Administrative Support Officer'
+    },
+    {
+      name: 'Saanvi Srivastava',
+      title: 'Administrative Support Officer'
+    }
+  ];
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
       <Navigation />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
+
+      <main className="container mx-auto px-4 py-16">
+        {/* Hero Section */}
         <div className="text-center mb-16">
-          <h1 className="text-4xl font-bold text-primary mb-4">Our Team</h1>
-          <div className="w-24 h-1 bg-accent-gold mx-auto mb-6"></div>
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent mb-4">
+            Our Team
+          </h1>
           <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
-            Meet the dedicated individuals who make Manteca Scholars possible. Our team of passionate 
-            educators and coordinators work together to inspire excellence in every student.
+            Meet the dedicated individuals who make Manteca Scholars possible. Our team works tirelessly to empower students through academic competition.
           </p>
         </div>
 
-        {/* Board of Directors and Coordinators */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-primary mb-8">Board of Directors and Coordinators</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {boardMembers.map((member, index) => (
-              <TeamMemberCard key={index} member={member} />
+        {/* Board of Directors */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
+            <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+            Board of Directors and Coordinators
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {boardMembers.map((member, idx) => (
+              <TeamMemberCard key={idx} member={member} />
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Executive Office Personnel */}
-        <div className="mb-16">
-          <h2 className="text-3xl font-bold text-primary mb-8">Executive Office Personnel</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {executivePersonnel.map((member, index) => (
-              <TeamMemberCard key={index} member={member} />
+        {/* Program Coordinators */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
+            <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+            Program Coordinators
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {programCoordinators.map((member, idx) => (
+              <TeamMemberCard key={idx} member={member} />
             ))}
           </div>
-        </div>
+        </section>
 
-        {/* Call to Action */}
-        <div className="text-center">
-          <div className="bg-gradient-to-r from-primary to-primary-hover text-primary-foreground rounded-lg p-8">
-            <h2 className="text-2xl font-bold mb-4">Join Our Mission</h2>
-            <p className="text-lg mb-6">
-              Interested in becoming part of our team? We're always looking for passionate individuals 
-              who share our commitment to academic excellence and student development.
-            </p>
-            <div className="text-accent-gold font-medium italic text-xl">
-              "Egredere et vince" - Step forward and conquer
-            </div>
+        {/* Undersecretariat */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
+            <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+            Undersecretariat
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {undersecretariat.map((member, idx) => (
+              <TeamMemberCard key={idx} member={member} />
+            ))}
+            {undersecretariatWithSahithi.map((member, idx) => (
+              <TeamMemberCard key={idx} member={member} />
+            ))}
+            {showMoreUndersecretary && undersecretariatHidden.map((member, idx) => (
+              <TeamMemberCard key={idx} member={member} />
+            ))}
           </div>
-        </div>
+          <div className="mt-6 text-center">
+            <Button
+              variant="ghost"
+              onClick={() => setShowMoreUndersecretary(!showMoreUndersecretary)}
+              className="text-primary"
+            >
+              {showMoreUndersecretary ? (
+                <>
+                  <ChevronUp className="w-4 h-4 mr-2" />
+                  Show Less
+                </>
+              ) : (
+                <>
+                  <ChevronDown className="w-4 h-4 mr-2" />
+                  Show More
+                </>
+              )}
+            </Button>
+          </div>
+        </section>
+
+        {/* Administrative Support */}
+        <section className="mb-16">
+          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
+            <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+            Administrative Support
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {administrativeSupport.map((member, idx) => (
+              <TeamMemberCard key={idx} member={member} />
+            ))}
+          </div>
+        </section>
+
+        {/* Join CTA */}
+        <section className="text-center py-16 bg-gradient-to-r from-primary/10 to-primary/5 rounded-3xl">
+          <h2 className="text-3xl font-bold mb-4">Join Our Mission</h2>
+          <p className="text-muted-foreground mb-8 max-w-2xl mx-auto">
+            We're always looking for passionate individuals to help guide our scholars to success. 
+            Whether as a mentor, volunteer, or supporter, your contribution makes a difference.
+          </p>
+          <Button size="lg" className="bg-primary hover:bg-primary/90" asChild>
+            <a href="/contact">Get Involved</a>
+          </Button>
+        </section>
       </main>
 
       <Footer />

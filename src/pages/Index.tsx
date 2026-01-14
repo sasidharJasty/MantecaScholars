@@ -58,7 +58,7 @@ const Index = () => {
     {
       icon: Trophy,
       title: "Proven Results",
-      description: "Consistent achievement in regional, state, and national competitions"
+      description: "Consistent achievement in regional, state, national and international competitions"
     }
   ];
 

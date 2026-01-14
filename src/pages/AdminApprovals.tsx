@@ -1,13 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '@/components/ui/navigation';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { CheckCircle, XCircle, Clock, Shield } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, Shield, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import { Input } from '@/components/ui/input';
+import { Badge } from '@/components/ui/badge'; // Added Badge import
 
 interface PendingUser {
   id: string;
@@ -18,17 +20,13 @@ interface PendingUser {
   created_at: string;
 }
 
-interface UserApproval {
-  userId: string;
-  role: 'student' | 'admin_i' | 'admin_ii' | 'admin_iii';
-}
-
 const AdminApprovals = () => {
   const { user, isAdmin } = useAuth();
   const navigate = useNavigate();
   const [pendingUsers, setPendingUsers] = useState<PendingUser[]>([]);
   const [selectedRoles, setSelectedRoles] = useState<Record<string, string>>({});
   const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (!user || !isAdmin()) {
@@ -123,118 +121,121 @@ const AdminApprovals = () => {
     }
   };
 
+  const filteredUsers = pendingUsers.filter(user => 
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading) {
     return (
-      <>
-        <Navigation />
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading...</p>
-          </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
         </div>
-      </>
+      </DashboardLayout>
     );
   }
 
   return (
-    <>
-      <Navigation />
-      <div className="min-h-screen bg-gradient-to-b from-background via-accent/10 to-background">
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-4xl mx-auto">
-            <div className="mb-8">
-              <h1 className="text-4xl font-bold text-primary mb-2">Account Approvals</h1>
-              <p className="text-muted-foreground">
-                Review and approve pending account requests
-              </p>
-            </div>
-
-            {pendingUsers.length === 0 ? (
-              <Card className="shadow-lg">
-                <CardContent className="flex flex-col items-center justify-center py-12">
-                  <CheckCircle className="w-16 h-16 text-primary mb-4" />
-                  <h3 className="text-xl font-semibold text-foreground mb-2">
-                    All Caught Up!
-                  </h3>
-                  <p className="text-muted-foreground">
-                    There are no pending account requests at this time.
-                  </p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {pendingUsers.map((user) => (
-                  <Card key={user.id} className="shadow-lg">
-                    <CardHeader>
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="flex items-center">
-                            <Clock className="w-5 h-5 mr-2 text-accent-gold" />
-                            {user.first_name} {user.last_name}
-                          </CardTitle>
-                          <CardDescription>{user.email}</CardDescription>
-                        </div>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(user.created_at).toLocaleDateString()}
-                        </span>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="mb-4 space-y-3">
-                        <p className="text-sm text-muted-foreground">
-                          <span className="font-medium">Member ID:</span>{' '}
-                          {user.member_id || 'Not provided'}
-                        </p>
-                        <div className="space-y-2">
-                          <label className="text-sm font-medium flex items-center gap-2">
-                            <Shield className="w-4 h-4 text-primary" />
-                            Assign Role
-                          </label>
-                          <Select
-                            value={selectedRoles[user.id] || 'student'}
-                            onValueChange={(value) => 
-                              setSelectedRoles(prev => ({ ...prev, [user.id]: value }))
-                            }
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Select role" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="student">Student</SelectItem>
-                              <SelectItem value="admin_i">Admin Level I</SelectItem>
-                              <SelectItem value="admin_ii">Admin Level II</SelectItem>
-                              <SelectItem value="admin_iii">Admin Level III</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <Button
-                          onClick={() => handleApproval(user.id, true)}
-                          className="flex-1"
-                        >
-                          <CheckCircle className="w-4 h-4 mr-2" />
-                          Approve
-                        </Button>
-                        <Button
-                          onClick={() => handleApproval(user.id, false)}
-                          variant="destructive"
-                          className="flex-1"
-                        >
-                          <XCircle className="w-4 h-4 mr-2" />
-                          Reject
-                        </Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+           <h1 className="text-3xl font-bold tracking-tight text-primary">Pending Approvals</h1>
+            <p className="text-muted-foreground">
+              Review and manage new account requests
+            </p>
         </div>
+
+        <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <Input 
+                placeholder="Search by name or email..." 
+                className="max-w-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+
+        {filteredUsers.length === 0 ? (
+          <div className="text-center py-12 bg-muted/20 rounded-lg">
+             {searchTerm ? (
+                <p>No requests found matching "{searchTerm}"</p>
+             ) : (
+                <>
+                    <CheckCircle className="w-16 h-16 text-primary mx-auto mb-4" />
+                    <h3 className="text-xl font-semibold mb-2">All Caught Up!</h3>
+                    <p className="text-muted-foreground">There are no pending account requests at this time.</p>
+                </>
+             )}
+          </div>
+        ) : (
+            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {filteredUsers.map((user) => (
+                    <Card key={user.id} className="flex flex-col">
+                        <CardHeader className="pb-3">
+                             <div className="flex justify-between items-start">
+                                <div>
+                                    <CardTitle className="text-lg flex items-center">
+                                       {user.first_name} {user.last_name}
+                                    </CardTitle>
+                                    <p className="text-sm text-muted-foreground break-all">{user.email}</p>
+                                </div>
+                                <Badge variant="outline" className="text-xs">
+                                    <Clock className="w-3 h-3 mr-1" />
+                                    {new Date(user.created_at).toLocaleDateString()}
+                                </Badge>
+                             </div>
+                        </CardHeader>
+                        <CardContent className="flex-1 flex flex-col gap-4">
+                            <div className="text-sm border rounded-md p-2 bg-muted/50">
+                                <span className="text-muted-foreground block text-xs uppercase tracking-wider mb-1">Membership Details</span>
+                                Member ID: {user.member_id || 'Not provided'}
+                            </div>
+
+                            <div className="mt-auto space-y-3">
+                                <div className="space-y-1">
+                                    <label className="text-xs font-medium text-muted-foreground">Assign Role</label>
+                                    <Select
+                                        value={selectedRoles[user.id] || 'student'}
+                                        onValueChange={(value) => 
+                                           setSelectedRoles(prev => ({ ...prev, [user.id]: value }))
+                                        }
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="student">Student</SelectItem>
+                                            <SelectItem value="admin_i">Admin Level I</SelectItem>
+                                            <SelectItem value="admin_ii">Admin Level II</SelectItem>
+                                            <SelectItem value="admin_iii">Admin Level III</SelectItem>
+                                        </SelectContent>
+                                    </Select>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                     <Button
+                                        onClick={() => handleApproval(user.id, false)}
+                                        variant="outline"
+                                        className="text-destructive hover:bg-destructive/10"
+                                    >
+                                        Reject
+                                    </Button>
+                                    <Button
+                                        onClick={() => handleApproval(user.id, true)}
+                                        className="bg-green-600 hover:bg-green-700"
+                                    >
+                                        Approve
+                                    </Button>
+                                </div>
+                            </div>
+                        </CardContent>
+                    </Card>
+                ))}
+            </div>
+        )}
       </div>
-    </>
+    </DashboardLayout>
   );
 };
 

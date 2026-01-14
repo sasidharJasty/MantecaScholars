@@ -24,6 +24,9 @@ import AdminProgramsManagement from "./pages/AdminProgramsManagement";
 import TeamLeaderDashboard from "./pages/TeamLeaderDashboard";
 import ProgramSelection from "./pages/ProgramSelection";
 import NotFound from "./pages/NotFound";
+import ProgramMain from "./pages/program/ProgramMain";
+import ProgramMembers from "./pages/program/ProgramMembers";
+import AdminChat from "./pages/AdminChat";
 
 const queryClient = new QueryClient();
 
@@ -52,9 +55,12 @@ const App = () => (
             <Route path="/admin/my-programs" element={<AdminProgramsManagement />} />
             <Route path="/admin/approvals" element={<AdminApprovals />} />
             <Route path="/admin/users" element={<AdminUsers />} />
+            <Route path="/admin/chat" element={<AdminChat />} />
             <Route path="/team-leader" element={<TeamLeaderDashboard />} />
             <Route path="/select-programs" element={<ProgramSelection />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
+            <Route path="/program/:programId" element={<ProgramMain />} />
+            <Route path="/program/:programId/members" element={<ProgramMembers />} />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

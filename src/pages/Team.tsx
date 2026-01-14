@@ -3,7 +3,8 @@ import Navigation from '@/components/ui/navigation';
 import Footer from '@/components/ui/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { User, Mail, ChevronDown, ChevronUp } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { User, Mail, ChevronDown, ChevronUp, Sparkles, Monitor, Code } from 'lucide-react';
 
 interface TeamMember {
   name: string;
@@ -12,39 +13,64 @@ interface TeamMember {
   email?: string;
 }
 
-const TeamMemberCard = ({ member }: { member: TeamMember }) => (
-  <Card className="bg-card/80 backdrop-blur-sm border-primary/10 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300">
-    <CardHeader className="pb-2">
-      <div className="flex items-start gap-4">
-        <div className="p-3 bg-gradient-to-br from-primary to-primary/60 rounded-full">
-          <User className="w-6 h-6 text-primary-foreground" />
-        </div>
-        <div className="flex-1">
-          <CardTitle className="text-lg">{member.name}</CardTitle>
-          <p className="text-sm text-primary font-medium">{member.title}</p>
-        </div>
-      </div>
-    </CardHeader>
-    <CardContent>
-      {member.roles && member.roles.length > 0 && (
-        <div className="mb-3 space-y-1">
-          {member.roles.map((role, idx) => (
-            <p key={idx} className="text-sm text-muted-foreground">{role}</p>
-          ))}
-        </div>
-      )}
-      {member.email && (
-        <a
-          href={`mailto:${member.email}`}
-          className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
-        >
-          <Mail className="w-4 h-4" />
-          {member.email}
-        </a>
-      )}
-    </CardContent>
-  </Card>
-);
+const TeamMemberCard = ({ member }: { member: TeamMember }) => {
+  const isCreator = member.name === 'Sasidhar Jasty';
+
+  return (
+    <div className="relative group hover:z-50 h-full">
+        <Card className="h-full backdrop-blur-sm bg-card/80 border-primary/10 hover:shadow-lg hover:shadow-primary/10 transition-all duration-300 overflow-visible relative">
+        <CardHeader className="pb-2">
+            <div className="flex items-start gap-4">
+            <div className={`p-3 rounded-full transition-colors flex items-center justify-center bg-gradient-to-br from-primary to-primary/60 text-primary-foreground`}>
+                {isCreator ? <Code className="w-6 h-6" /> : <User className="w-6 h-6" />}
+            </div>
+            <div className="flex-1">
+                <CardTitle className="text-lg flex items-center gap-2">
+                {member.name}
+                {isCreator && (
+                    <Badge variant="secondary" className="text-[10px] h-5 px-1.5 font-normal tracking-wide bg-primary/10 text-primary hover:bg-primary/20">
+                        Dev
+                    </Badge>
+                )}
+                </CardTitle>
+                <p className="text-sm font-medium text-primary">
+                {member.title}
+                </p>
+            </div>
+            </div>
+        </CardHeader>
+        <CardContent>
+            {member.email && (
+            <div className="my-2">
+                <a
+                href={`mailto:${member.email}`}
+                className="flex items-center gap-2 text-sm text-primary hover:text-primary/80 transition-colors"
+                >
+                <Mail className="w-4 h-4" />
+                {member.email}
+                </a>
+            </div>
+            )}
+
+            {/* Roles: Absolute positioned to avoid layout shift */}
+            {member.roles && member.roles.length > 0 && (
+            <div className="absolute left-0 right-0 top-[95%] pt-2 px-0 z-20 opacity-0 group-hover:opacity-100 transition-all duration-200 translate-y-2 group-hover:translate-y-0 pointer-events-none group-hover:pointer-events-auto">
+                <div className="bg-popover border border-primary/10 shadow-lg rounded-b-lg p-4 -mt-1 mx-[-1px]">
+                    <div className="space-y-2">
+                        {member.roles.map((role, idx) => (
+                        <p key={idx} className="text-sm text-foreground bg-accent/50 p-2 rounded text-[13px] border-l-2 border-primary/30">
+                            {role}
+                        </p>
+                        ))}
+                    </div>
+                </div>
+            </div>
+            )}
+        </CardContent>
+        </Card>
+    </div>
+  );
+};
 
 const Team = () => {
   const [showMoreUndersecretary, setShowMoreUndersecretary] = useState(false);
@@ -103,6 +129,10 @@ const Team = () => {
 
   const undersecretariat: TeamMember[] = [
     {
+      name: 'Sasidhar Jasty',
+      title: 'Sr. Undersecretary for Information Technology'
+    },
+    {
       name: 'Sai Nellutla',
       title: 'Sr. Undersecretary for Student Discipline',
       roles: ['Program Coordinator for Speech and Debate']
@@ -123,10 +153,7 @@ const Team = () => {
       name: 'Nessa Jerald',
       title: 'Sr. Undersecretary for Community Affairs'
     },
-    {
-      name: 'Sasidhar Jasty',
-      title: 'Sr. Undersecretary for Information Technology'
-    },
+    
     {
       name: 'Raunak Mahar',
       title: 'Sr. Undersecretary for Student Development'

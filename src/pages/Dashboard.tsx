@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '@/components/ui/navigation';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Calendar, Users, GraduationCap, Bell, Crown, TrendingUp, Plus, Settings } from 'lucide-react';
+import { Calendar, Users, Database, ArrowRight, Settings, Plus, Crown, Shield, UserCheck, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import Footer from '@/components/ui/footer';
 import { toast } from '@/hooks/use-toast';
 
 interface ProgramInfo {
@@ -20,35 +19,16 @@ interface ProgramInfo {
 interface Event {
   id: string;
   title: string;
-  description: string | null;
   event_date: string;
-  location: string | null;
   program_name: string;
-}
-
-interface Announcement {
-  id: string;
-  title: string;
-  content: string;
-  created_at: string;
-  program_name: string;
-}
-
-interface Stats {
-  totalPrograms: number;
-  upcomingEvents: number;
-  unreadAnnouncements: number;
 }
 
 const Dashboard = () => {
-  const { user, profile, isAdmin } = useAuth();
+  const { user, profile } = useAuth();
   const navigate = useNavigate();
   const [programs, setPrograms] = useState<ProgramInfo[]>([]);
   const [events, setEvents] = useState<Event[]>([]);
-  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
-  const [stats, setStats] = useState<Stats>({ totalPrograms: 0, upcomingEvents: 0, unreadAnnouncements: 0 });
   const [loading, setLoading] = useState(true);
-  const [isTeamLeader, setIsTeamLeader] = useState(false);
 
   useEffect(() => {
     if (!user) {
@@ -57,12 +37,7 @@ const Dashboard = () => {
     }
 
     if (profile?.account_status !== 'approved') {
-      navigate('/');
-      toast({
-        title: "Account Pending",
-        description: "Your account is pending approval by an administrator.",
-        variant: "destructive"
-      });
+        // Handled by auth flow logic usually, but fail-safe here
       return;
     }
 
@@ -81,7 +56,7 @@ const Dashboard = () => {
             website
           )
         `)
-        .eq('user_id', user!.id);
+        .eq('user_id', user?.id || '');
 
       if (rostersError) throw rostersError;
 
@@ -93,87 +68,32 @@ const Dashboard = () => {
       })) || [];
 
       setPrograms(programsList);
-      
-      // Check if user is a team leader for any program
-      const hasLeaderRole = programsList.some(p => p.is_team_leader);
-      setIsTeamLeader(hasLeaderRole);
 
       // Fetch upcoming events for user's programs
-      const programIds = programsList.map(p => p.program_id);
-      
-      if (programIds.length > 0) {
-        const { data: eventsData, error: eventsError } = await supabase
-          .from('events')
-          .select(`
-            id,
-            title,
-            description,
-            event_date,
-            location,
-            program_id,
-            programs:program_id (
-              name
-            )
-          `)
-          .in('program_id', programIds)
-          .gte('event_date', new Date().toISOString())
-          .order('event_date', { ascending: true })
-          .limit(5);
-
-        if (eventsError) throw eventsError;
-
+      if (programsList.length > 0) {
+          const programIds = programsList.map(p => p.program_id);
+          const { data: eventsData } = await supabase
+            .from('events')
+            .select(`
+                id, title, event_date,
+                programs:program_id (name)
+            `)
+            .in('program_id', programIds)
+            .gte('event_date', new Date().toISOString())
+            .order('event_date', { ascending: true })
+            .limit(5);
+        
         const eventsList = eventsData?.map((e: any) => ({
-          id: e.id,
-          title: e.title,
-          description: e.description,
-          event_date: e.event_date,
-          location: e.location,
-          program_name: e.programs?.name || 'Unknown Program'
+            id: e.id,
+            title: e.title,
+            event_date: e.event_date,
+            program_name: e.programs?.name
         })) || [];
-
         setEvents(eventsList);
-
-        // Fetch announcements
-        const { data: announcementsData, error: announcementsError } = await supabase
-          .from('program_announcements')
-          .select(`
-            id,
-            title,
-            content,
-            created_at,
-            program_id,
-            programs:program_id (name)
-          `)
-          .in('program_id', programIds)
-          .order('created_at', { ascending: false })
-          .limit(5);
-
-        if (announcementsError) throw announcementsError;
-
-        const announcementsList = announcementsData?.map((a: any) => ({
-          id: a.id,
-          title: a.title,
-          content: a.content,
-          created_at: a.created_at,
-          program_name: a.programs?.name || 'Unknown Program'
-        })) || [];
-
-        setAnnouncements(announcementsList);
-
-        // Set stats
-        setStats({
-          totalPrograms: programsList.length,
-          upcomingEvents: eventsList.length,
-          unreadAnnouncements: announcementsList.length
-        });
       }
-    } catch (error: any) {
+      
+    } catch (error) {
       console.error('Error fetching dashboard data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load dashboard data.",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
@@ -181,271 +101,145 @@ const Dashboard = () => {
 
   if (loading) {
     return (
-      <>
-        <Navigation />
-        <div className="min-h-screen bg-background flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading dashboard...</p>
-          </div>
+      <DashboardLayout>
+        <div className="flex items-center justify-center min-h-[60vh]">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
         </div>
-      </>
+      </DashboardLayout>
     );
   }
 
-  return (
-    <>
-      <Navigation />
-      <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
-        <div className="container mx-auto px-4 py-16">
-          <div className="max-w-6xl mx-auto">
-            {/* Hero Header */}
-            <div className="mb-12 relative">
-              <div className="absolute inset-0 bg-gradient-to-r from-primary/20 to-primary/5 rounded-3xl blur-3xl -z-10"></div>
-              <div className="relative bg-card/50 backdrop-blur-sm rounded-3xl p-8 border border-primary/10 shadow-xl">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent mb-3">
-                      Welcome back, {profile?.first_name || 'Scholar'}!
-                    </h1>
-                    <p className="text-lg text-muted-foreground">
-                      Member ID: <span className="font-semibold text-foreground bg-primary/10 px-3 py-1 rounded-full">{profile?.member_id || 'Not assigned'}</span>
-                    </p>
+  // Pending Approval View
+  if (profile?.account_status !== 'approved') {
+      return (
+          <DashboardLayout>
+              <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 text-center px-4">
+                  <div className="bg-yellow-50 p-6 rounded-full border-2 border-yellow-200">
+                      <Clock className="w-16 h-16 text-yellow-600" />
                   </div>
-                  <div className="flex items-center gap-3">
-                    {isAdmin() && (
-                      <Button onClick={() => navigate('/admin')} variant="outline">
-                        Admin Panel
-                      </Button>
-                    )}
-                    {isTeamLeader && (
-                      <Button onClick={() => navigate('/team-leader')} className="bg-accent-gold text-accent-gold-foreground hover:bg-accent-gold/90">
-                        <Crown className="w-4 h-4 mr-2" />
-                        Team Leader
-                      </Button>
-                    )}
-                    <div className="hidden md:block">
-                      <div className="w-20 h-20 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center shadow-lg">
-                        <span className="text-2xl font-bold text-white">{profile?.first_name?.charAt(0) || 'S'}</span>
-                      </div>
-                    </div>
+                  <div className="space-y-2">
+                      <h1 className="text-3xl font-bold tracking-tight text-foreground">Account Pending Approval</h1>
+                      <p className="text-muted-foreground max-w-lg mx-auto text-lg">
+                          Your account is currently waiting for administrator approval. You will receive access to the dashboard and programs once your registration is confirmed.
+                      </p>
                   </div>
-                </div>
+                  <div className="flex gap-4">
+                      <Button variant="outline" onClick={() => navigate('/')}>Return to Home</Button>
+                      <Button variant="ghost" onClick={() => navigate('/contact')}>Contact Support</Button>
+                  </div>
               </div>
-            </div>
+          </DashboardLayout>
+      );
+  }
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-              <Card className="border-primary/10 bg-card/80 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">My Programs</CardTitle>
-                  <GraduationCap className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.totalPrograms}</div>
-                  <p className="text-xs text-muted-foreground">Enrolled programs</p>
-                </CardContent>
-              </Card>
-              
-              <Card className="border-primary/10 bg-card/80 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Upcoming Events</CardTitle>
-                  <Calendar className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.upcomingEvents}</div>
-                  <p className="text-xs text-muted-foreground">Events scheduled</p>
-                </CardContent>
-              </Card>
-
-              <Card className="border-primary/10 bg-card/80 backdrop-blur-sm">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium">Announcements</CardTitle>
-                  <Bell className="h-4 w-4 text-primary" />
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.unreadAnnouncements}</div>
-                  <p className="text-xs text-muted-foreground">Recent updates</p>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8 mb-8">
-              <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
-                <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <GraduationCap className="w-6 h-6 text-primary" />
-                    </div>
-                  <CardTitle className="text-xl">My Programs</CardTitle>
-                  </div>
-                  <CardDescription>
-                    Programs you're enrolled in
-                    <Button 
-                      size="sm" 
-                      variant="ghost" 
-                      onClick={() => navigate('/select-programs')}
-                      className="ml-2"
-                    >
-                      <Settings className="w-3 h-3 mr-1" />
-                      Manage
-                    </Button>
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  {programs.length > 0 ? (
-                    <div className="space-y-3">
-                      {programs.map((program) => (
-                        <div
-                          key={program.program_id}
-                          className="p-3 bg-accent rounded-lg border border-border hover:bg-accent/80 transition-colors"
-                        >
-                          <div className="flex items-center justify-between">
-                            <h3 className="font-semibold text-foreground">{program.program_name}</h3>
-                            {program.is_team_leader && (
-                              <Badge variant="secondary" className="bg-primary/10">
-                                <Crown className="w-3 h-3 mr-1" />
-                                Team Leader
-                              </Badge>
-                            )}
-                          </div>
-                          {program.program_website && (
-                            <a
-                              href={program.program_website}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-sm text-primary hover:text-primary-hover"
-                            >
-                              Visit website →
-                            </a>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <div className="text-center py-6">
-                      <p className="text-muted-foreground mb-4">You are not enrolled in any programs yet.</p>
-                      <Button onClick={() => navigate('/select-programs')}>
-                        <Plus className="w-4 h-4 mr-2" />
-                        Select Programs
-                      </Button>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
-                <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Users className="w-6 h-6 text-primary" />
-                    </div>
-                    <CardTitle className="text-xl">Profile Information</CardTitle>
-                  </div>
-                  <CardDescription>Your account details</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <dl className="space-y-2">
-                    <div>
-                      <dt className="text-sm font-medium text-muted-foreground">Full Name</dt>
-                      <dd className="text-foreground">{profile?.first_name} {profile?.last_name}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-muted-foreground">Email</dt>
-                      <dd className="text-foreground">{profile?.email}</dd>
-                    </div>
-                    <div>
-                      <dt className="text-sm font-medium text-muted-foreground">Member ID</dt>
-                      <dd className="text-foreground">{profile?.member_id || 'Not assigned'}</dd>
-                    </div>
-                  </dl>
-                </CardContent>
-              </Card>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
-                <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
-                  <div className="flex items-center space-x-3">
-                    <div className="p-2 bg-primary/10 rounded-lg">
-                      <Calendar className="w-6 h-6 text-primary" />
-                    </div>
-                    <CardTitle className="text-xl">Upcoming Events</CardTitle>
-                  </div>
-                  <CardDescription>Your schedule for the coming days</CardDescription>
-                </CardHeader>
-                <CardContent>
-                {events.length > 0 ? (
-                  <div className="space-y-3">
-                    {events.map((event) => (
-                      <div
-                        key={event.id}
-                        className="p-4 bg-accent rounded-lg border border-border hover:bg-accent/80 transition-colors"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-foreground">{event.title}</h3>
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(event.event_date).toLocaleDateString()}
-                          </span>
-                        </div>
-                        {event.description && (
-                          <p className="text-sm text-muted-foreground mb-2">{event.description}</p>
-                        )}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-primary">{event.program_name}</span>
-                          {event.location && (
-                            <span className="text-muted-foreground">{event.location}</span>
-                          )}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No upcoming events scheduled.</p>
-                )}
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-2xl border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-primary/20 transition-all duration-300">
-              <CardHeader className="bg-gradient-to-br from-primary/5 to-transparent">
-                <div className="flex items-center space-x-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Bell className="w-6 h-6 text-primary" />
-                  </div>
-                  <CardTitle className="text-xl">Announcements</CardTitle>
+  return (
+    <DashboardLayout>
+        <div className="space-y-8">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                     <h1 className="text-3xl font-bold tracking-tight">Welcome back, {profile?.first_name}</h1>
+                     <p className="text-muted-foreground">Here's what's happening in your programs.</p>
                 </div>
-                <CardDescription>Latest updates from your programs</CardDescription>
-              </CardHeader>
-              <CardContent>
-                {announcements.length > 0 ? (
-                  <div className="space-y-3">
-                    {announcements.map((announcement) => (
-                      <div
-                        key={announcement.id}
-                        className="p-4 bg-accent rounded-lg border border-border hover:bg-accent/80 transition-colors"
-                      >
-                        <div className="flex justify-between items-start mb-2">
-                          <h3 className="font-semibold text-foreground">{announcement.title}</h3>
-                          <span className="text-xs text-muted-foreground">
-                            {new Date(announcement.created_at).toLocaleDateString()}
-                          </span>
-                        </div>
-                        <p className="text-sm text-muted-foreground mb-2">{announcement.content}</p>
-                        <span className="text-xs text-primary">{announcement.program_name}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">No recent announcements.</p>
-                )}
-              </CardContent>
-            </Card>
             </div>
-          </div>
+
+            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                 {/* Programs Card */}
+                 <Card className="md:col-span-2">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Database className="w-5 h-5 text-primary" />
+                            My Programs
+                        </CardTitle>
+                        <CardDescription>Programs you are currently enrolled in.</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {programs.length === 0 ? (
+                            <div className="text-center py-8 text-muted-foreground">
+                                <p>You haven't joined any programs yet.</p>
+                                <Button className="mt-4" onClick={() => navigate('/programs')}>Browse Programs</Button>
+                            </div>
+                        ) : (
+                            <div className="grid gap-4 md:grid-cols-2">
+                                {programs.map(prog => (
+                                    <div 
+                                      key={prog.program_id} 
+                                      className="flex items-center justify-between p-4 rounded-lg border bg-card hover:bg-accent/50 transition-colors cursor-pointer"
+                                      onClick={() => navigate(`/program/${prog.program_id}`)}
+                                    >
+                                        <div>
+                                            <h3 className="font-semibold">{prog.program_name}</h3>
+                                            {prog.is_team_leader && (
+                                                <Badge variant="secondary" className="mt-1 text-xs">
+                                                    <Crown className="w-3 h-3 mr-1 text-yellow-500" />
+                                                    Team Leader
+                                                </Badge>
+                                            )}
+                                        </div>
+                                        <Button size="sm" variant="ghost" className="h-8 w-8 p-0">
+                                            <ArrowRight className="w-4 h-4" />
+                                        </Button>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                 </Card>
+
+                 {/* Upcoming Events */}
+                 <Card>
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Calendar className="w-5 h-5 text-primary" />
+                            Upcoming Events
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {events.length === 0 ? (
+                             <p className="text-sm text-muted-foreground text-center py-4">No upcoming events.</p>
+                        ) : (
+                            <div className="space-y-4">
+                                {events.map(event => (
+                                    <div key={event.id} className="flex flex-col space-y-1 border-b pb-3 last:border-0 last:pb-0">
+                                        <span className="font-medium text-sm">{event.title}</span>
+                                        <div className="flex justify-between text-xs text-muted-foreground">
+                                            <span>{new Date(event.event_date).toLocaleDateString()}</span>
+                                            <span>{event.program_name}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+                        )}
+                    </CardContent>
+                 </Card>
+            </div>
+            
+             {/* Admin Quick Links if Admin */}
+             {['admin_i', 'admin_ii', 'admin_iii'].includes(profile?.role || '') && (
+                 <div className="border-t pt-8">
+                     <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
+                        <Shield className="w-5 h-5 text-red-500" />
+                        Admin Access
+                     </h2>
+                     <div className="grid gap-4 md:grid-cols-3">
+                        <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" onClick={() => navigate('/admin')}>
+                            <Database className="w-6 h-6" />
+                            <span>Admin Dashboard</span>
+                        </Button>
+                        <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" onClick={() => navigate('/admin/programs')}>
+                            <Settings className="w-6 h-6" />
+                            <span>Manage Programs</span>
+                        </Button>
+                        {(profile?.role === 'admin_ii' || profile?.role === 'admin_iii') && (
+                             <Button variant="outline" className="h-auto py-4 flex flex-col gap-2" onClick={() => navigate('/admin/approvals')}>
+                                <UserCheck className="w-6 h-6" />
+                                <span>Approvals</span>
+                            </Button>
+                        )}
+                     </div>
+                 </div>
+             )}
         </div>
-      </div>
-      <Footer />
-    </>
+    </DashboardLayout>
   );
 };
 

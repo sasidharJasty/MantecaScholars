@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 import Navigation from "@/components/ui/navigation";
 import Footer from "@/components/ui/footer";
 import { Card, CardContent } from "@/components/ui/card";
-import { ExternalLink, Calendar, Users } from "lucide-react";
+import { ExternalLink, Calendar, Users, PlusCircle } from "lucide-react";
+import { Button } from '@/components/ui/button';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 
@@ -16,6 +19,8 @@ interface Program {
 const Programs = () => {
   const [programs, setPrograms] = useState<Program[]>([]);
   const [loading, setLoading] = useState(true);
+  const { user, profile } = useAuth();
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchPrograms();
@@ -23,10 +28,17 @@ const Programs = () => {
 
   const fetchPrograms = async () => {
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from('programs')
         .select('*')
         .order('name');
+      
+      // Filter out System Admin for non-admins
+      if (profile?.role !== 'admin_iii') {
+           query = query.neq('name', 'System Admin');
+      }
+
+      const { data, error } = await query;
 
       if (error) throw error;
       setPrograms(data || []);
@@ -51,10 +63,21 @@ const Programs = () => {
         <div className="text-center mb-16">
           <h1 className="text-4xl font-bold text-primary mb-4">Our Programs</h1>
           <div className="w-24 h-1 bg-accent-gold mx-auto mb-6"></div>
-          <p className="text-xl text-muted-foreground max-w-3xl mx-auto">
+          <p className="text-xl text-muted-foreground max-w-3xl mx-auto mb-8">
             Discover the diverse range of academic competitions and programs that help our students 
             develop critical thinking, leadership skills, and excellence in their chosen fields.
           </p>
+          
+          {user && profile?.account_status === 'approved' && (
+            <Button 
+              size="lg" 
+              className="gap-2"
+              onClick={() => navigate('/select-programs')}
+            >
+              <PlusCircle className="w-5 h-5" />
+              Manage My Programs
+            </Button>
+          )}
         </div>
 
         {/* Programs Grid */}

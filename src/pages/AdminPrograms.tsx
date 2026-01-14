@@ -1,10 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '@/components/ui/navigation';
-import Footer from '@/components/ui/footer';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import DashboardLayout from '@/components/layout/DashboardLayout';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -12,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Plus, Trash2, Edit, ExternalLink, Users, Calendar } from 'lucide-react';
+import { Plus, Trash2, Edit, ExternalLink, Users, Calendar, Search, Database } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface Program {
@@ -38,6 +36,7 @@ const AdminPrograms = () => {
   const [loadingData, setLoadingData] = useState(true);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [editingProgram, setEditingProgram] = useState<Program | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
   
   const [formData, setFormData] = useState({
     name: '',
@@ -77,13 +76,11 @@ const AdminPrograms = () => {
       const statsData: ProgramStats = {};
       
       for (const program of programsData || []) {
-        // Get member count
         const { count: memberCount } = await supabase
           .from('rosters')
           .select('*', { count: 'exact', head: true })
           .eq('program_id', program.id);
 
-        // Get event count
         const { count: eventCount } = await supabase
           .from('events')
           .select('*', { count: 'exact', head: true })
@@ -226,29 +223,26 @@ const AdminPrograms = () => {
     setEditingProgram(null);
   };
 
+  const filteredPrograms = programs.filter(program => 
+    program.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
   if (loading || loadingData) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading programs...</p>
-          </div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navigation />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        {/* Header */}
-        <div className="flex items-center justify-between mb-8">
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-primary mb-2">Manage Programs</h1>
+            <h1 className="text-3xl font-bold tracking-tight text-primary">Manage Programs</h1>
             <p className="text-muted-foreground">
               Add, edit, and remove programs from the system.
             </p>
@@ -314,49 +308,58 @@ const AdminPrograms = () => {
           </Dialog>
         </div>
 
-        {/* Programs Grid */}
+        <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <Input 
+                placeholder="Search programs..." 
+                className="max-w-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {programs.map((program) => (
-            <Card key={program.id} className="h-full">
+          {filteredPrograms.map((program) => (
+            <Card key={program.id} className="flex flex-col h-full hover:shadow-md transition-shadow">
               <CardHeader>
                 <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <CardTitle className="text-lg mb-2">{program.name}</CardTitle>
-                    <div className="flex items-center gap-4 text-sm text-muted-foreground">
+                  <div className="flex-1 min-w-0">
+                    <CardTitle className="text-lg mb-1 truncate">{program.name}</CardTitle>
+                    <div className="flex items-center gap-4 text-xs text-muted-foreground">
                       <div className="flex items-center">
-                        <Users className="w-4 h-4 mr-1" />
-                        {stats[program.id]?.members || 0} members
+                        <Users className="w-3 h-3 mr-1" />
+                        {stats[program.id]?.members || 0}
                       </div>
                       <div className="flex items-center">
-                        <Calendar className="w-4 h-4 mr-1" />
-                        {stats[program.id]?.events || 0} events
+                        <Calendar className="w-3 h-3 mr-1" />
+                        {stats[program.id]?.events || 0}
                       </div>
                     </div>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <p className="text-muted-foreground text-sm mb-4 line-clamp-3">
-                  {program.description}
+              <CardContent className="flex-1 flex flex-col pt-0">
+                <p className="text-muted-foreground text-sm mb-4 line-clamp-3 flex-1">
+                  {program.description || 'No description provided.'}
                 </p>
                 
-                <div className="flex flex-col gap-2">
+                <div className="flex flex-col gap-2 mt-auto">
                   <a
                     href={program.website}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center text-sm text-accent-gold hover:text-primary transition-colors"
+                    className="inline-flex items-center text-sm text-primary hover:underline transition-colors mb-2"
                   >
                     Visit Website
                     <ExternalLink className="w-3 h-3 ml-1" />
                   </a>
                   
-                  <div className="flex gap-2 mt-2">
+                  <div className="flex gap-2 border-t pt-4">
                     <Dialog open={editingProgram?.id === program.id} onOpenChange={(open) => {
                       if (!open) setEditingProgram(null);
                     }}>
                       <DialogTrigger asChild>
-                        <Button variant="outline" size="sm" onClick={() => openEditDialog(program)}>
+                        <Button variant="outline" size="sm" className="flex-1" onClick={() => openEditDialog(program)}>
                           <Edit className="w-4 h-4 mr-1" />
                           Edit
                         </Button>
@@ -412,7 +415,7 @@ const AdminPrograms = () => {
 
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button variant="destructive" size="sm">
+                        <Button variant="destructive" size="sm" className="flex-1">
                           <Trash2 className="w-4 h-4 mr-1" />
                           Delete
                         </Button>
@@ -426,7 +429,6 @@ const AdminPrograms = () => {
                               <li>The program from the public website</li>
                               <li>All member rosters ({stats[program.id]?.members || 0} members)</li>
                               <li>All scheduled events ({stats[program.id]?.events || 0} events)</li>
-                              <li>All admin assignments for this program</li>
                             </ul>
                             <p className="mt-2 font-semibold text-destructive">
                               This action cannot be undone.
@@ -452,19 +454,18 @@ const AdminPrograms = () => {
         </div>
 
         {programs.length === 0 && (
-          <div className="text-center py-12">
+          <div className="flex flex-col items-center justify-center py-12 text-center rounded-lg border border-dashed">
+            <Database className="w-12 h-12 text-muted-foreground mb-4" />
             <h3 className="text-lg font-medium text-muted-foreground mb-2">No programs found</h3>
-            <p className="text-muted-foreground mb-4">Get started by adding your first program.</p>
+            <p className="text-muted-foreground mb-4 max-w-sm">Get started by creating your first academic program to manage students and events.</p>
             <Button onClick={() => setIsAddDialogOpen(true)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Program
             </Button>
           </div>
         )}
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

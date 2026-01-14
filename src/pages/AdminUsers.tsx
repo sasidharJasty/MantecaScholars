@@ -1,16 +1,16 @@
 import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import Navigation from '@/components/ui/navigation';
-import Footer from '@/components/ui/footer';
+import DashboardLayout from '@/components/layout/DashboardLayout';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Checkbox } from '@/components/ui/checkbox';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/integrations/supabase/client';
-import { Users, Shield, Settings, CheckCircle, Crown } from 'lucide-react';
+import { Users, Shield, Settings, Crown, Search } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface User {
@@ -41,6 +41,7 @@ const AdminUsers = () => {
   const [userPrograms, setUserPrograms] = useState<UserProgram[]>([]);
   const [loading, setLoading] = useState(true);
   const [dialogOpen, setDialogOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     if (!user || !canManageUsers()) {
@@ -54,7 +55,6 @@ const AdminUsers = () => {
     try {
       setLoading(true);
 
-      // Fetch all approved users with their roles
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, email, first_name, last_name, member_id')
@@ -63,7 +63,6 @@ const AdminUsers = () => {
 
       if (profilesError) throw profilesError;
 
-      // Fetch roles for each user
       const usersWithRoles = await Promise.all(
         (profilesData || []).map(async (profile) => {
           const { data: roleData } = await supabase
@@ -81,7 +80,6 @@ const AdminUsers = () => {
 
       setUsers(usersWithRoles);
 
-      // Fetch all programs
       const { data: programsData, error: programsError } = await supabase
         .from('programs')
         .select('id, name')
@@ -92,11 +90,6 @@ const AdminUsers = () => {
 
     } catch (error: any) {
       console.error('Error fetching data:', error);
-      toast({
-        title: "Error",
-        description: "Failed to load users data.",
-        variant: "destructive"
-      });
     } finally {
       setLoading(false);
     }
@@ -211,76 +204,82 @@ const AdminUsers = () => {
 
   const getRoleBadgeColor = (role: string) => {
     switch (role) {
-      case 'admin_iii': return 'bg-red-500';
-      case 'admin_ii': return 'bg-orange-500';
-      case 'admin_i': return 'bg-yellow-500';
-      case 'student': return 'bg-blue-500';
+      case 'admin_iii': return 'bg-red-500 hover:bg-red-600';
+      case 'admin_ii': return 'bg-orange-500 hover:bg-orange-600';
+      case 'admin_i': return 'bg-yellow-500 hover:bg-yellow-600';
+      case 'student': return 'bg-blue-500 hover:bg-blue-600';
       default: return 'bg-gray-500';
     }
   };
 
-  const getRoleLabel = (role: string) => {
-    switch (role) {
-      case 'admin_iii': return 'Admin III';
-      case 'admin_ii': return 'Admin II';
-      case 'admin_i': return 'Admin I';
-      case 'student': return 'Student';
-      default: return role;
-    }
-  };
+  const filteredUsers = users.filter(user => 
+    user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    user.last_name?.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-background">
-        <Navigation />
+      <DashboardLayout>
         <div className="flex items-center justify-center min-h-[60vh]">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
-            <p className="text-muted-foreground">Loading users...</p>
-          </div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary mx-auto mb-4"></div>
         </div>
-      </div>
+      </DashboardLayout>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
-      <Navigation />
-      
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="mb-8">
-          <h1 className="text-4xl font-bold text-primary mb-2">User Management</h1>
-          <p className="text-muted-foreground">Manage user roles and program assignments</p>
+    <DashboardLayout>
+      <div className="space-y-6">
+        <div>
+           <h1 className="text-3xl font-bold tracking-tight text-primary">User Management</h1>
+            <p className="text-muted-foreground">
+              Manage user roles and assign programs
+            </p>
         </div>
 
-        <div className="grid gap-4">
-          {users.map((usr) => (
-            <Card key={usr.id} className="border-primary/10 bg-card/80 backdrop-blur-sm hover:shadow-lg transition-all">
-              <CardHeader>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center">
-                      <span className="text-lg font-bold text-white">
+        <div className="flex items-center space-x-2">
+            <Search className="w-4 h-4 text-muted-foreground" />
+            <Input 
+                placeholder="Search users..." 
+                className="max-w-sm"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+            />
+        </div>
+
+        <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+          {filteredUsers.map((usr) => (
+            <Card key={usr.id} className="flex flex-col">
+              <CardHeader className="flex flex-row items-start gap-4 space-y-0 pb-2">
+                 <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                    <span className="font-semibold text-primary">
                         {usr.first_name?.charAt(0) || usr.email.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div>
-                      <CardTitle className="flex items-center gap-2">
-                        {usr.first_name} {usr.last_name}
-                        <Badge className={`${getRoleBadgeColor(usr.role)} text-white`}>
-                          <Shield className="w-3 h-3 mr-1" />
-                          {getRoleLabel(usr.role)}
-                        </Badge>
-                      </CardTitle>
-                      <CardDescription>{usr.email}</CardDescription>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-3">
+                    </span>
+                 </div>
+                 <div className="flex-1 min-w-0">
+                    <CardTitle className="text-base font-semibold truncate">
+                         {usr.first_name} {usr.last_name}
+                    </CardTitle>
+                    <CardDescription className="truncate">{usr.email}</CardDescription>
+                 </div>
+              </CardHeader>
+              <CardContent className="flex-1 flex flex-col gap-4 pt-4">
+                 <div className="flex items-center justify-between">
+                     <Badge className={`${getRoleBadgeColor(usr.role)} text-white border-0`}>
+                        {usr.role.replace('_', ' ').toUpperCase()}
+                     </Badge>
+                     <span className="text-xs text-muted-foreground">
+                        ID: {usr.member_id || 'N/A'}
+                     </span>
+                 </div>
+
+                 <div className="mt-auto space-y-2">
                     <Select
                       value={usr.role}
                       onValueChange={(value) => handleRoleChange(usr.id, value)}
                     >
-                      <SelectTrigger className="w-[180px]">
+                      <SelectTrigger className="w-full">
                         <SelectValue />
                       </SelectTrigger>
                       <SelectContent>
@@ -290,6 +289,7 @@ const AdminUsers = () => {
                         <SelectItem value="admin_iii">Admin Level III</SelectItem>
                       </SelectContent>
                     </Select>
+
                     <Dialog open={dialogOpen && selectedUser?.id === usr.id} onOpenChange={(open) => {
                       setDialogOpen(open);
                       if (open) {
@@ -298,49 +298,48 @@ const AdminUsers = () => {
                       }
                     }}>
                       <DialogTrigger asChild>
-                        <Button variant="outline">
+                        <Button variant="outline" className="w-full">
                           <Settings className="w-4 h-4 mr-2" />
-                          Manage Programs
+                          Programs
                         </Button>
                       </DialogTrigger>
                       <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
                         <DialogHeader>
-                          <DialogTitle>Manage Programs for {usr.first_name} {usr.last_name}</DialogTitle>
+                          <DialogTitle>Manage Programs - {usr.first_name} {usr.last_name}</DialogTitle>
                           <DialogDescription>
-                            Assign programs and set team leader status
+                            Assign programs and manage team leader status
                           </DialogDescription>
                         </DialogHeader>
-                        <div className="space-y-4 mt-4">
+                        <div className="space-y-2 mt-4">
                           {programs.map((program) => {
                             const assignment = userPrograms.find(up => up.program_id === program.id);
                             const isAssigned = !!assignment;
                             const isTeamLeader = assignment?.is_team_leader || false;
 
                             return (
-                              <div key={program.id} className="flex items-center justify-between p-4 border rounded-lg">
+                              <div key={program.id} className="flex items-center justify-between p-3 border rounded-lg bg-card hover:bg-accent/50 transition-colors">
                                 <div className="flex items-center gap-3">
                                   <Checkbox
                                     checked={isAssigned}
                                     onCheckedChange={() => handleProgramToggle(program.id, isAssigned)}
                                   />
-                                  <div>
-                                    <p className="font-medium">{program.name}</p>
+                                  <div className="flex flex-col">
+                                    <span className="font-medium text-sm">{program.name}</span>
                                     {isAssigned && isTeamLeader && (
-                                      <Badge variant="secondary" className="mt-1">
-                                        <Crown className="w-3 h-3 mr-1" />
-                                        Team Leader
-                                      </Badge>
+                                      <span className="text-xs text-yellow-600 flex items-center gap-1">
+                                        <Crown className="w-3 h-3" /> Team Leader
+                                      </span>
                                     )}
                                   </div>
                                 </div>
                                 {isAssigned && (
                                   <Button
-                                    variant={isTeamLeader ? "default" : "outline"}
+                                    variant={isTeamLeader ? "secondary" : "ghost"}
                                     size="sm"
                                     onClick={() => handleTeamLeaderToggle(program.id, isTeamLeader)}
+                                    className="h-8 text-xs"
                                   >
-                                    <Crown className="w-4 h-4 mr-2" />
-                                    {isTeamLeader ? 'Remove' : 'Make'} Team Leader
+                                    {isTeamLeader ? 'Remove Leader' : 'Make Leader'}
                                   </Button>
                                 )}
                               </div>
@@ -349,16 +348,13 @@ const AdminUsers = () => {
                         </div>
                       </DialogContent>
                     </Dialog>
-                  </div>
-                </div>
-              </CardHeader>
+                 </div>
+              </CardContent>
             </Card>
           ))}
         </div>
-      </main>
-
-      <Footer />
-    </div>
+      </div>
+    </DashboardLayout>
   );
 };
 

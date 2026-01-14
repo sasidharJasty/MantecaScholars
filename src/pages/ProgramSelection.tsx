@@ -38,11 +38,18 @@ const ProgramSelection = () => {
     try {
       setLoading(true);
 
-      // Fetch all programs
-      const { data: programsData, error: programsError } = await supabase
+      // Fetch all programs (exclude System Admin for non-admins)
+      let query = supabase
         .from('programs')
         .select('*')
         .order('name');
+      
+      // Filter out System Admin for non-admins
+      if (profile?.role !== 'admin_iii') {
+           query = query.neq('name', 'System Admin');
+      }
+
+      const { data: programsData, error: programsError } = await query;
 
       if (programsError) throw programsError;
 

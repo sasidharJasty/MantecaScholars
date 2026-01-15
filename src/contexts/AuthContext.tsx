@@ -12,6 +12,7 @@ export interface Profile {
   role: UserRole;
   member_id?: string | null;
   account_status?: string | null;
+  has_seen_onboarding?: boolean;
   created_at: string;
   updated_at: string;
 }
@@ -25,6 +26,7 @@ interface AuthContextType {
   signIn: (email: string, password: string) => Promise<{ error: any }>;
   signOut: () => Promise<{ error: any }>;
   resetPassword: (email: string) => Promise<{ error: any }>;
+  setOnboardingSeen: () => Promise<void>;
   isAdmin: () => boolean;
   canManagePrograms: () => boolean;
   canManageUsers: () => boolean;
@@ -166,6 +168,23 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return profile?.role === 'admin_iii';
   };
 
+  const setOnboardingSeen = async () => {
+    if (!user || !profile) return;
+    
+    // Optimistic update
+    setProfile(prev => prev ? { ...prev, has_seen_onboarding: true } : null);
+
+    const { error } = await supabase
+      .from('profiles')
+      .update({ has_seen_onboarding: true })
+      .eq('id', user.id);
+      
+    if (error) {
+      console.error('Error updating onboarding status:', error);
+      // Revert if failed (optional, but good practice usually)
+    }
+  };
+
   const value = {
     user,
     session,
@@ -177,7 +196,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword,
     isAdmin,
     canManagePrograms,
-    canManageUsers
+    canManageUsers,
+    setOnboardingSeen
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

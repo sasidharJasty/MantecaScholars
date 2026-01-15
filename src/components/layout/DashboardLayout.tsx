@@ -2,21 +2,28 @@ import { SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar"
 import { AppSidebar } from "./AppSidebar"
 import { useAuth } from "@/contexts/AuthContext"
 import { useNavigate } from "react-router-dom"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { useLocation } from "react-router-dom"
+import OnboardingDialog from "@/components/onboarding/OnboardingDialog"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
-    const { user, loading } = useAuth();
+    const { user, profile, loading } = useAuth();
     const navigate = useNavigate();
     const location = useLocation();
+    const [showOnboarding, setShowOnboarding] = useState(false);
 
     useEffect(() => {
         if (!loading && !user) {
             navigate("/auth");
         }
-    }, [user, loading, navigate]);
+        
+        // Show onboarding if not seen yet
+        if (!loading && profile && !profile.has_seen_onboarding) {
+            setShowOnboarding(true);
+        }
+    }, [user, profile, loading, navigate]);
 
     if (loading) {
         return <div className="flex items-center justify-center min-h-screen">Loading...</div>;
@@ -27,6 +34,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     return (
         <SidebarProvider>
             <AppSidebar />
+            <OnboardingDialog 
+                open={showOnboarding} 
+                onOpenChange={setShowOnboarding}
+                role={profile?.role || 'guest'}
+            />
             <main className="w-full bg-background min-h-screen">
                 <header className="flex h-16 shrink-0 items-center gap-2 border-b px-4 bg-card">
                     <SidebarTrigger className="-ml-1" />

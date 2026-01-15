@@ -23,6 +23,8 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ProgramEvents from './ProgramEvents';
 
 interface ProgramDetails {
   id: string;
@@ -418,38 +420,57 @@ const ProgramMain = () => {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 flex-1 min-h-0">
-           {/* Left: Info Board */}
-           <Card className="lg:col-span-1 flex flex-col min-h-0">
-              <CardHeader className="flex flex-row items-center justify-between shrink-0">
-                 <CardTitle className="text-lg">Information Board</CardTitle>
-                 {canEditInfo && !isEditingInfo && (
-                   <Button variant="ghost" size="sm" onClick={() => { setEditedInfo(program?.info_content || ''); setIsEditingInfo(true); }} aria-label="Edit Information">
-                     <Edit className="w-4 h-4" aria-hidden="true" />
-                   </Button>
-                 )}
-                 {isEditingInfo && (
-                   <div className="flex gap-2">
-                     <Button variant="ghost" size="sm" onClick={() => setIsEditingInfo(false)}>Cancel</Button>
-                     <Button size="sm" onClick={handleUpdateInfo}>Save</Button>
-                   </div>
-                 )}
-              </CardHeader>
-              <CardContent className="flex-1 overflow-auto">
-                 {isEditingInfo ? (
-                   <Textarea 
-                     className="min-h-[300px] h-full" 
-                     value={editedInfo} 
-                     onChange={(e) => setEditedInfo(e.target.value)} 
-                     placeholder="Write important program information, announcements, or resources here..."
-                     aria-label="Edit program information"
-                   />
-                 ) : (
-                   <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
-                     {program?.info_content || <span className="text-muted-foreground italic">No information posted yet.</span>}
-                   </div>
-                 )}
-              </CardContent>
-           </Card>
+           {/* Left: Info Board & Events */}
+           <div className="lg:col-span-1 flex flex-col min-h-0 h-full"> 
+               <Tabs defaultValue="info" className="flex flex-col h-full">
+                   <TabsList className="w-full grid grid-cols-2 mb-2">
+                       <TabsTrigger value="info">Info</TabsTrigger>
+                       <TabsTrigger value="events">Events</TabsTrigger>
+                   </TabsList>
+                   
+                   <TabsContent value="info" className="flex-1 mt-0 min-h-0 data-[state=active]:flex flex-col">
+                       <Card className="h-full flex flex-col">
+                          <CardHeader className="flex flex-row items-center justify-between shrink-0 py-3">
+                             <CardTitle className="text-lg">Information Board</CardTitle>
+                             {canEditInfo && !isEditingInfo && (
+                               <Button variant="ghost" size="sm" onClick={() => { setEditedInfo(program?.info_content || ''); setIsEditingInfo(true); }} aria-label="Edit Information">
+                                 <Edit className="w-4 h-4" aria-hidden="true" />
+                               </Button>
+                             )}
+                             {isEditingInfo && (
+                               <div className="flex gap-2">
+                                 <Button variant="ghost" size="sm" onClick={() => setIsEditingInfo(false)}>Cancel</Button>
+                                 <Button size="sm" onClick={handleUpdateInfo}>Save</Button>
+                               </div>
+                             )}
+                          </CardHeader>
+                          <CardContent className="flex-1 overflow-auto">
+                             {isEditingInfo ? (
+                               <Textarea 
+                                 className="min-h-[300px] h-full" 
+                                 value={editedInfo} 
+                                 onChange={(e) => setEditedInfo(e.target.value)} 
+                                 placeholder="Write important program information, announcements, or resources here..."
+                                 aria-label="Edit program information"
+                               />
+                             ) : (
+                               <div className="prose prose-sm max-w-none dark:prose-invert whitespace-pre-wrap">
+                                 {program?.info_content || <span className="text-muted-foreground italic">No information posted yet.</span>}
+                               </div>
+                             )}
+                          </CardContent>
+                       </Card>
+                   </TabsContent>
+                   
+                   <TabsContent value="events" className="flex-1 mt-0 min-h-0 data-[state=active]:flex flex-col">
+                       <Card className="h-full flex flex-col">
+                            <CardContent className="flex-1 p-4 overflow-hidden flex flex-col">
+                                <ProgramEvents programId={programId!} canManage={canModerate} />
+                            </CardContent>
+                       </Card>
+                   </TabsContent>
+               </Tabs>
+           </div>
 
            {/* Right: Chat */}
            <Card className="lg:col-span-2 flex flex-col min-h-0">

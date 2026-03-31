@@ -17,7 +17,7 @@ import { useAuth } from '@/contexts/AuthContext';
 interface OnboardingDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  role: 'student' | 'admin_i' | 'admin_ii' | 'admin_iii' | 'team_leader' | 'guest';
+  role?: 'student' | 'admin_i' | 'admin_ii' | 'admin_iii' | 'team_leader' | 'guest';
 }
 
 interface OnboardingStep {
@@ -27,7 +27,7 @@ interface OnboardingStep {
   illustration: React.ReactNode;
 }
 
-const OnboardingDialog = ({ open, onOpenChange, role }: OnboardingDialogProps) => {
+const OnboardingDialog = ({ open, onOpenChange, role = 'guest' }: OnboardingDialogProps) => {
   const [currentStep, setCurrentStep] = useState(0);
   const { setOnboardingSeen } = useAuth();
 
@@ -38,7 +38,7 @@ const OnboardingDialog = ({ open, onOpenChange, role }: OnboardingDialogProps) =
 
   const getSteps = (): OnboardingStep[] => {
     // ADMIN STEPS (Admin I, II, III)
-    if (role.includes('admin')) {
+    if (role.startsWith('admin')) {
         const steps: OnboardingStep[] = [
             {
                 title: 'Welcome, Administrator',

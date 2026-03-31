@@ -149,6 +149,15 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
 
+                <SidebarMenuItem>
+                  <SidebarMenuButton asChild isActive={isActive("/admin/content")}>
+                    <Link to="/admin/content">
+                      <Settings />
+                      <span>Website Content</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+
                  {(profile?.role === 'admin_ii' || profile?.role === 'admin_iii') && (
                   <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin/approvals")}>

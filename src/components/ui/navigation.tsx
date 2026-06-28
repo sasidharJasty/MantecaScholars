@@ -2,8 +2,8 @@ import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Menu, X, User, LogOut, Shield } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
-import { toast } from '@/hooks/use-toast';
+import { useAuth } from "@/contexts/AuthContext";
+import { toast } from "@/hooks/use-toast";
 
 const Navigation = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,12 +18,12 @@ const Navigation = () => {
       toast({
         title: "Error",
         description: "Failed to sign out.",
-        variant: "destructive"
+        variant: "destructive",
       });
     } else {
       toast({
         title: "Signed Out",
-        description: "You have been successfully signed out."
+        description: "You have been successfully signed out.",
       });
     }
   };
@@ -34,21 +34,23 @@ const Navigation = () => {
     { path: "/programs", label: "Our Programs" },
     { path: "/team", label: "Our Team" },
     { path: "/donate", label: "Donate" },
+    { path: "/world-scholars-coaching", label: "World Scholars Coaching" },
+
     { path: "/contact", label: "Contact" },
   ];
 
   // Add member dashboard for authenticated members
-  if (user && profile?.account_status === 'approved' && !isAdmin()) {
+  if (user && profile?.account_status === "approved" && !isAdmin()) {
     navItems.push({ path: "/dashboard", label: "Dashboard" });
   }
 
   // Add admin items for authenticated admins
   if (user && isAdmin()) {
     navItems.push({ path: "/admin", label: "Admin" });
-    if (profile?.role === 'admin_ii' || profile?.role === 'admin_iii') {
+    if (profile?.role === "admin_ii" || profile?.role === "admin_iii") {
       navItems.push({ path: "/admin/approvals", label: "Approvals" });
     }
-    if (profile?.role === 'admin_iii') {
+    if (profile?.role === "admin_iii") {
       navItems.push({ path: "/admin/users", label: "Users" });
     }
   }
@@ -80,7 +82,7 @@ const Navigation = () => {
                 {item.label}
               </Link>
             ))}
-            
+
             {/* User Menu / Auth Buttons */}
             <div className="flex items-center space-x-2 ml-4">
               {user ? (
@@ -112,7 +114,11 @@ const Navigation = () => {
               onClick={() => setIsOpen(!isOpen)}
               aria-label="Toggle menu"
             >
-              {isOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              {isOpen ? (
+                <X className="h-6 w-6" />
+              ) : (
+                <Menu className="h-6 w-6" />
+              )}
             </Button>
           </div>
         </div>
@@ -132,11 +138,13 @@ const Navigation = () => {
                   }`}
                   onClick={() => setIsOpen(false)}
                 >
-                  {item.label === "Admin" && <Shield className="w-4 h-4 mr-2" />}
+                  {item.label === "Admin" && (
+                    <Shield className="w-4 h-4 mr-2" />
+                  )}
                   {item.label}
                 </Link>
               ))}
-              
+
               {/* Mobile Auth Section */}
               <div className="border-t border-border pt-2 mt-2">
                 {user ? (
@@ -144,7 +152,12 @@ const Navigation = () => {
                     <p className="text-sm text-muted-foreground mb-2">
                       {profile?.first_name || user.email}
                     </p>
-                    <Button variant="outline" size="sm" onClick={handleSignOut} className="w-full">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSignOut}
+                      className="w-full"
+                    >
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign Out
                     </Button>

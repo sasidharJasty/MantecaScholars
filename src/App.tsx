@@ -27,6 +27,7 @@ import NotFound from "./pages/NotFound";
 import ProgramMain from "./pages/program/ProgramMain";
 import ProgramMembers from "./pages/program/ProgramMembers";
 import AdminChat from "./pages/AdminChat";
+import WorldScholarsCoaching from "./pages/WorldScholarsCoaching";
 
 const queryClient = new QueryClient();
 
@@ -52,15 +53,25 @@ const App = () => (
             <Route path="/admin/level-ii" element={<AdminIIDashboard />} />
             <Route path="/admin/level-iii" element={<AdminIIIDashboard />} />
             <Route path="/admin/programs" element={<AdminPrograms />} />
-            <Route path="/admin/my-programs" element={<AdminProgramsManagement />} />
+            <Route
+              path="/admin/my-programs"
+              element={<AdminProgramsManagement />}
+            />
             <Route path="/admin/approvals" element={<AdminApprovals />} />
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/chat" element={<AdminChat />} />
             <Route path="/team-leader" element={<TeamLeaderDashboard />} />
+            <Route
+              path="/world-scholars-coaching"
+              element={<WorldScholarsCoaching />}
+            />
             <Route path="/select-programs" element={<ProgramSelection />} />
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
             <Route path="/program/:programId" element={<ProgramMain />} />
-            <Route path="/program/:programId/members" element={<ProgramMembers />} />
+            <Route
+              path="/program/:programId/members"
+              element={<ProgramMembers />}
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

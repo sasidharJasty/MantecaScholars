@@ -107,7 +107,7 @@ const AdminIIIDashboard = () => {
   return (
     <DashboardLayout>
       <div className="space-y-6">
-        <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} />
+        <OnboardingDialog open={showOnboarding} onOpenChange={setShowOnboarding} role={profile?.role || 'guest'} />
         
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
           <div>

@@ -10,7 +10,7 @@ const Donate = () => {
       <Navigation />
       <div className="min-h-screen bg-gradient-to-b from-background via-accent/10 to-background">
         <div className="container mx-auto px-4 py-16">
-          <div className="max-w-4xl mx-auto">
+          <div className="max-w-6xl mx-auto">
             <div className="text-center mb-12">
               <div className="flex justify-center mb-6">
                 <div className="w-16 h-16 bg-gradient-to-br from-primary to-primary-hover rounded-full flex items-center justify-center">
@@ -57,25 +57,31 @@ const Donate = () => {
                   </ul>
                 </div>
 
-                <div className="text-center pt-4">
-                  <Button 
-                    size="lg" 
-                    className="group"
-                    asChild
-                  >
-                    <a 
-                      href="https://snap.raise.com" 
-                      target="_blank" 
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center"
-                    >
-                      Donate via Snap! Raise
-                      <ExternalLink className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                    </a>
-                  </Button>
-                  <p className="text-sm text-muted-foreground mt-4">
-                    Secure donation processing through Snap! Raise
+                <div className="pt-2">
+                  <div className="rounded-xl border border-border/70 overflow-hidden bg-background">
+                    <iframe
+                      src="https://www.zeffy.com/en-US/donation-form/manteca-scholars--2026"
+                      title="Donate to Manteca Scholars via Zeffy"
+                      className="w-full h-[760px] md:h-[900px]"
+                      loading="lazy"
+                    />
+                  </div>
+                  <p className="text-sm text-muted-foreground mt-4 text-center">
+                    If the form does not load in your browser, use the secure link below.
                   </p>
+                  <div className="text-center mt-3">
+                    <Button size="sm" variant="outline" className="group" asChild>
+                      <a
+                        href="https://www.zeffy.com/en-US/donation-form/manteca-scholars--2026"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center"
+                      >
+                        Open Donation Form in New Tab
+                        <ExternalLink className="ml-2 w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                      </a>
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="border-t pt-6">

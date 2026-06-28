@@ -7,9 +7,11 @@ import { BookOpen, Users, Trophy, ArrowRight, Star, Target } from "lucide-react"
 import heroImage from "@/assets/hero-academic.jpg";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { defaultNewsItems, fetchSiteContent, isNewsItems, NewsItem } from "@/lib/siteContent";
 
 const Index = () => {
   const [programCount, setProgramCount] = useState<number>(12);
+  const [newsItems, setNewsItems] = useState<NewsItem[]>(defaultNewsItems);
 
   useEffect(() => {
     const fetchProgramCount = async () => {
@@ -26,23 +28,22 @@ const Index = () => {
     fetchProgramCount();
   }, []);
 
-  const newsItems = [
-    {
-      title: "World Scholars Cup Regional Competition Success",
-      date: "March 15, 2025",
-      excerpt: "Our students achieved outstanding results at the regional competition, with three teams advancing to globals."
-    },
-    {
-      title: "Science Olympiad State Championship",
-      date: "March 10, 2025", 
-      excerpt: "Manteca Scholars teams placed in the top 10 in multiple events at the state championship."
-    },
-    {
-      title: "Mock Trial District Victory",
-      date: "March 5, 2025",
-      excerpt: "Our mock trial team won the district championship and will represent our region at state level."
-    }
-  ];
+  useEffect(() => {
+    let mounted = true;
+
+    const fetchNewsItems = async () => {
+      const items = await fetchSiteContent("home_news", defaultNewsItems, isNewsItems);
+      if (mounted) {
+        setNewsItems(items);
+      }
+    };
+
+    fetchNewsItems();
+
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
   const highlights = [
     {
@@ -90,7 +91,7 @@ const Index = () => {
             <Button size="lg" variant="secondary" asChild className="text-lg px-8 py-3">
               <Link to="/about">Learn More About Us</Link>
             </Button>
-            <Button size="lg" variant="outline" asChild className="text-lg px-8 py-3 border-primary-foreground text-primary-foreground hover:bg-primary-foreground hover:text-primary">
+            <Button size="lg" variant="secondary" asChild className="text-lg px-8 py-3">
               <Link to="/programs">Explore Programs</Link>
             </Button>
           </div>

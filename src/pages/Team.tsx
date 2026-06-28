@@ -1,17 +1,13 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import Navigation from '@/components/ui/navigation';
 import Footer from '@/components/ui/footer';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { User, Mail, ChevronDown, ChevronUp, Sparkles, Monitor, Code } from 'lucide-react';
-
-interface TeamMember {
-  name: string;
-  title: string;
-  roles?: string[];
-  email?: string;
-}
+import { User, Mail, ChevronDown, ChevronUp, Code } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { defaultTeamPageContent, fetchSiteContent, isTeamPageContent, TeamMember } from '@/lib/siteContent';
 
 const TeamMemberCard = ({ member }: { member: TeamMember }) => {
   const isCreator = member.name === 'Sasidhar Jasty';
@@ -74,128 +70,45 @@ const TeamMemberCard = ({ member }: { member: TeamMember }) => {
 
 const Team = () => {
   const [showMoreUndersecretary, setShowMoreUndersecretary] = useState(false);
+  const [teamContent, setTeamContent] = useState(defaultTeamPageContent);
 
-  const boardMembers: TeamMember[] = [
-    {
-      name: 'Miles Lima',
-      title: 'Founder, President and Director of Programs',
-      roles: ['Program Coordinator: World Scholars Cup']
-    },
-    {
-      name: 'Shaurya Khairmode',
-      title: 'Director-General',
-      roles: ['Program Coordinator: MS Clash']
-    },
-    {
-      name: 'Aditi Malgunde',
-      title: 'Director of Records and Archives',
-      roles: ['Program Coordinator: American Medical Students Association and Women in STEM']
-    },
-    {
-      name: 'Isabel Aquinde',
-      title: 'Co-Director of the Brand',
-      roles: ['Program Coordinator: Model UN']
-    },
-    {
-      name: 'Charlene Trinh',
-      title: 'Co-Director of the Brand'
-    },
-    {
-      name: 'Sagar Shah',
-      title: 'Director of Finance and Asset Management'
-    },
-    {
-      name: 'Nikitha Muruganagarajan',
-      title: 'Chief Advisor to the President; Director of Fundraising',
-      roles: ['Program Coordinator: Skills USA, Science Olympiad and Quiz Bowl']
-    },
-    {
-      name: 'Kaushik Chamchani',
-      title: 'Board Support Officer',
-      roles: ['Program Coordinator: MS Math']
-    }
-  ];
+  useEffect(() => {
+    let mounted = true;
 
-  const programCoordinators: TeamMember[] = [
-    {
-      name: 'Calypso Culbertson',
-      title: 'Program Coordinator for Mock Trial'
-    },
-    {
-      name: 'Snehal Bhaira',
-      title: 'Program Coordinator for Scholastic Art and Writing'
-    }
-  ];
+    const loadTeamContent = async () => {
+      const content = await fetchSiteContent('team_page', defaultTeamPageContent, isTeamPageContent);
+      if (mounted) {
+        setTeamContent(content);
+      }
+    };
 
-  const undersecretariat: TeamMember[] = [
-    {
-      name: 'Sasidhar Jasty',
-      title: 'Sr. Undersecretary for Information Technology'
-    },
-    {
-      name: 'Sai Nellutla',
-      title: 'Sr. Undersecretary for Student Discipline',
-      roles: ['Program Coordinator for Speech and Debate']
-    },
-    {
-      name: 'Abhimanyu Nair',
-      title: 'Sr. Undersecretary for Grants and Sponsorships'
-    },
-    {
-      name: 'Harshith Kumar',
-      title: 'Sr. Undersecretary for Parent and Family Coordination'
-    },
-    {
-      name: 'Christina Addis',
-      title: 'Sr. Undersecretary for Events'
-    },
-    {
-      name: 'Nessa Jerald',
-      title: 'Sr. Undersecretary for Community Affairs'
-    },
-    
-    {
-      name: 'Raunak Mahar',
-      title: 'Sr. Undersecretary for Student Development'
-    }
-  ];
+    loadTeamContent();
 
-  const undersecretariatHidden: TeamMember[] = [
-    {
-      name: 'Prithik Karthikeyan Manopriya',
-      title: 'Sr. Undersecretary for Internal Affairs'
-    }
-  ];
+    return () => {
+      mounted = false;
+    };
+  }, []);
 
-  const undersecretariatWithSahithi: TeamMember[] = [
-    {
-      name: 'Sahithi Kamma',
-      title: 'Sr. Undersecretary for Social Media; Administrative Support Officer'
-    }
-  ];
+  const {
+    boardMembers,
+    programCoordinators,
+    undersecretariat,
+    undersecretariatHidden,
+    undersecretariatWithSahithi,
+    administrativeSupport,
+  } = teamContent;
 
-  const administrativeSupport: TeamMember[] = [
-    {
-      name: 'Tammana Grewal',
-      title: 'Executive Assistant'
-    },
-    {
-      name: 'Anjana Barath',
-      title: 'Administrative Support Officer'
-    },
-    {
-      name: 'Saanvi Srivastava',
-      title: 'Administrative Support Officer'
-    }
-  ];
+  const undersecretariatVisible = showMoreUndersecretary
+    ? [...undersecretariat, ...undersecretariatWithSahithi, ...undersecretariatHidden]
+    : [...undersecretariat, ...undersecretariatWithSahithi];
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background via-primary/5 to-background">
       <Navigation />
 
-      <main className="container mx-auto px-4 py-16">
+      <main className="container mx-auto px-4 py-10">
         {/* Hero Section */}
-        <div className="text-center mb-16">
+        <div className="text-center mb-6">
           <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary to-primary/60 bg-clip-text text-transparent mb-4">
             Our Team
           </h1>
@@ -204,82 +117,97 @@ const Team = () => {
           </p>
         </div>
 
-        {/* Board of Directors */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
-            <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
-            Board of Directors and Coordinators
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {boardMembers.map((member, idx) => (
-              <TeamMemberCard key={idx} member={member} />
-            ))}
-          </div>
-        </section>
+        <Tabs defaultValue="board" className="mb-12">
+          <TabsList className="sticky top-3 z-30 w-full h-auto grid grid-cols-2 md:grid-cols-4 gap-2 p-2 bg-card/95 backdrop-blur border border-primary/10 rounded-xl mb-4">
+            <TabsTrigger value="board" className="text-xs md:text-sm">Board ({boardMembers.length})</TabsTrigger>
+            <TabsTrigger value="coordinators" className="text-xs md:text-sm">Coordinators ({programCoordinators.length})</TabsTrigger>
+            <TabsTrigger value="undersecretariat" className="text-xs md:text-sm">Undersecretariat ({undersecretariatVisible.length})</TabsTrigger>
+            <TabsTrigger value="support" className="text-xs md:text-sm">Support ({administrativeSupport.length})</TabsTrigger>
+          </TabsList>
 
-        {/* Program Coordinators */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
-            <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
-            Program Coordinators
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {programCoordinators.map((member, idx) => (
-              <TeamMemberCard key={idx} member={member} />
-            ))}
-          </div>
-        </section>
+          <TabsContent value="board">
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
+                <div className="h-7 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+                Board of Directors and Coordinators
+              </h2>
+              <ScrollArea className="h-[64vh] pr-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-3">
+                  {boardMembers.map((member, idx) => (
+                    <TeamMemberCard key={idx} member={member} />
+                  ))}
+                </div>
+              </ScrollArea>
+            </section>
+          </TabsContent>
 
-        {/* Undersecretariat */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
-            <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
-            Undersecretariat
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {undersecretariat.map((member, idx) => (
-              <TeamMemberCard key={idx} member={member} />
-            ))}
-            {undersecretariatWithSahithi.map((member, idx) => (
-              <TeamMemberCard key={idx} member={member} />
-            ))}
-            {showMoreUndersecretary && undersecretariatHidden.map((member, idx) => (
-              <TeamMemberCard key={idx} member={member} />
-            ))}
-          </div>
-          <div className="mt-6 text-center">
-            <Button
-              variant="ghost"
-              onClick={() => setShowMoreUndersecretary(!showMoreUndersecretary)}
-              className="text-primary"
-            >
-              {showMoreUndersecretary ? (
-                <>
-                  <ChevronUp className="w-4 h-4 mr-2" />
-                  Show Less
-                </>
-              ) : (
-                <>
-                  <ChevronDown className="w-4 h-4 mr-2" />
-                  Show More
-                </>
-              )}
-            </Button>
-          </div>
-        </section>
+          <TabsContent value="coordinators">
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
+                <div className="h-7 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+                Program Coordinators
+              </h2>
+              <ScrollArea className="h-[64vh] pr-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-3">
+                  {programCoordinators.map((member, idx) => (
+                    <TeamMemberCard key={idx} member={member} />
+                  ))}
+                </div>
+              </ScrollArea>
+            </section>
+          </TabsContent>
 
-        {/* Administrative Support */}
-        <section className="mb-16">
-          <h2 className="text-3xl font-bold text-foreground mb-8 flex items-center gap-3">
-            <div className="h-8 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
-            Administrative Support
-          </h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {administrativeSupport.map((member, idx) => (
-              <TeamMemberCard key={idx} member={member} />
-            ))}
-          </div>
-        </section>
+          <TabsContent value="undersecretariat">
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
+                <div className="h-7 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+                Undersecretariat
+              </h2>
+              <ScrollArea className="h-[60vh] pr-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-3">
+                  {undersecretariatVisible.map((member, idx) => (
+                    <TeamMemberCard key={idx} member={member} />
+                  ))}
+                </div>
+              </ScrollArea>
+              <div className="mt-5 text-center">
+                <Button
+                  variant="ghost"
+                  onClick={() => setShowMoreUndersecretary(!showMoreUndersecretary)}
+                  className="text-primary"
+                >
+                  {showMoreUndersecretary ? (
+                    <>
+                      <ChevronUp className="w-4 h-4 mr-2" />
+                      Show Less
+                    </>
+                  ) : (
+                    <>
+                      <ChevronDown className="w-4 h-4 mr-2" />
+                      Show More
+                    </>
+                  )}
+                </Button>
+              </div>
+            </section>
+          </TabsContent>
+
+          <TabsContent value="support">
+            <section>
+              <h2 className="text-2xl font-bold text-foreground mb-4 flex items-center gap-3">
+                <div className="h-7 w-1 bg-gradient-to-b from-primary to-primary/40 rounded-full"></div>
+                Administrative Support
+              </h2>
+              <ScrollArea className="h-[64vh] pr-3">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5 pb-3">
+                  {administrativeSupport.map((member, idx) => (
+                    <TeamMemberCard key={idx} member={member} />
+                  ))}
+                </div>
+              </ScrollArea>
+            </section>
+          </TabsContent>
+        </Tabs>
 
         {/* Join CTA */}
         <section className="text-center py-16 bg-gradient-to-r from-primary/10 to-primary/5 rounded-3xl">

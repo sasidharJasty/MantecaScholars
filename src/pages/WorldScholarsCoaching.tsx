@@ -91,7 +91,7 @@ const WorldScholarsCoaching = () => {
 
     try {
       const response = await fetch(
-        "https://formsubmit.co/ajax/sasidhar.jasty@gmail.com",
+        "https://formsubmit.co/ajax/mlima@mantecascholars.org",
         {
           method: "POST",
           body: formData,

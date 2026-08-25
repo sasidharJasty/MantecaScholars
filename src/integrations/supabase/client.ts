@@ -2,7 +2,9 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = "https://gwqxauloakvcruxerpdh.supabase.co";
+const SUPABASE_URL = import.meta.env.PROD 
+  ? "https://www.mantecascholars.org/supabase-api" 
+  : "https://gwqxauloakvcruxerpdh.supabase.co";
 const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imd3cXhhdWxvYWt2Y3J1eGVycGRoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTg1NjI4MjcsImV4cCI6MjA3NDEzODgyN30.ugZ7x4mysX-RzsDyFq7-lteLcj3ohiUo8cfpWwr3rNU";
 
 // Import the supabase client like this:

@@ -117,29 +117,43 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const signUp = async (email: string, password: string, firstName?: string, lastName?: string, memberId?: string) => {
-    const redirectUrl = `${window.location.origin}/`;
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: redirectUrl,
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          member_id: memberId,
+    try {
+      const redirectUrl = `${window.location.origin}/`;
+      
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: redirectUrl,
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            member_id: memberId,
+          }
         }
+      });
+      return { error };
+    } catch (err: any) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+        return { error: { message: 'Network Connection Blocked: If you are using a school or managed network, a web filter (e.g., Lightspeed) may be blocking access. Try using a personal device or request your administrator to whitelist mantecascholars.org and supabase.co.' } };
       }
-    });
-    return { error };
+      return { error: { message: err.message || 'An unexpected error occurred.' } };
+    }
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    return { error };
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      return { error };
+    } catch (err: any) {
+      if (err instanceof TypeError && err.message === 'Failed to fetch') {
+        return { error: { message: 'Network Connection Blocked: If you are using a school or managed network, a web filter (e.g., Lightspeed) may be blocking access. Try using a personal device or request your administrator to whitelist mantecascholars.org and supabase.co.' } };
+      }
+      return { error: { message: err.message || 'An unexpected error occurred.' } };
+    }
   };
 
   const signOut = async () => {

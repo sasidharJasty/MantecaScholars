@@ -1,8 +1,9 @@
 {
-  "rewrites": [
+  "redirects": [
     {
       "source": "/api/:path*",
-      "destination": "https://sj76.pythonanywhere.com/api/:path*"
+      "destination": "https://sj76.pythonanywhere.com/api/:path*",
+      "permanent": false
     }
   ]
 }

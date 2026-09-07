@@ -1,9 +1,12 @@
 {
-  "redirects": [
+  "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://sj76.pythonanywhere.com/api/:path*",
-      "permanent": false
+      "destination": "https://sj76.pythonanywhere.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
     }
   ]
 }

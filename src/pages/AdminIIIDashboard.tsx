@@ -13,7 +13,6 @@ import {
 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import ChatMonitor from '@/components/admin/ChatMonitor';
-import OnboardingDialog from '@/components/onboarding/OnboardingDialog';
 
 interface DashboardStats {
   totalPrograms: number;
@@ -36,15 +35,6 @@ const AdminIIIDashboard = () => {
     totalStudents: 0
   });
   const [loadingStats, setLoadingStats] = useState(true);
-  const [showOnboarding, setShowOnboarding] = useState(false);
-
-  useEffect(() => {
-    const hasSeenOnboarding = localStorage.getItem('onboarding_completed');
-    if (!hasSeenOnboarding && profile?.role === 'admin_iii') {
-      setShowOnboarding(true);
-    }
-  }, [profile]);
-
   useEffect(() => {
     if (!loading && (!user || profile?.role !== 'admin_iii')) {
       toast({
@@ -126,7 +116,7 @@ const AdminIIIDashboard = () => {
                 </Badge>
               )}
             </Button>
-            <Button variant="outline" onClick={() => setShowOnboarding(true)}>
+            <Button variant="outline" onClick={() => window.dispatchEvent(new Event('manteca:open-onboarding'))}>
               <HelpCircle className="w-4 h-4 mr-2" />
               Help
             </Button>

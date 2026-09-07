@@ -7,6 +7,7 @@ import { Separator } from "@/components/ui/separator"
 import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { useLocation } from "react-router-dom"
 import OnboardingDialog from "@/components/onboarding/OnboardingDialog"
+import { ONBOARDING_VERSION, onboardingStorageKey } from "@/lib/onboarding"
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
     const { user, profile, loading } = useAuth();
@@ -19,11 +20,17 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             navigate("/auth");
         }
         
-        // Show onboarding if not seen yet
-        if (!loading && profile && !profile.has_seen_onboarding) {
-            setShowOnboarding(true);
+        if (!loading && user && profile) {
+            const key = onboardingStorageKey(user.id, profile.role);
+            setShowOnboarding(localStorage.getItem(key) !== ONBOARDING_VERSION);
         }
     }, [user, profile, loading, navigate]);
+
+    useEffect(() => {
+        const openOnboarding = () => setShowOnboarding(true);
+        window.addEventListener('manteca:open-onboarding', openOnboarding);
+        return () => window.removeEventListener('manteca:open-onboarding', openOnboarding);
+    }, []);
 
     if (loading) {
         return <div className="flex items-center justify-center min-h-screen">Loading...</div>;

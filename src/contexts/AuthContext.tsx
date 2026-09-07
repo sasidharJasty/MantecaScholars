@@ -1,218 +1,23 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { User, Session } from '@supabase/supabase-js';
-import { supabase } from '@/integrations/supabase/client';
+import { api } from '@/lib/api-client';
+import { ONBOARDING_VERSION, onboardingStorageKey } from '@/lib/onboarding';
 
 export type UserRole = 'admin_i' | 'admin_ii' | 'admin_iii' | 'student' | 'guest';
-
-export interface Profile {
-  id: string;
-  email: string;
-  first_name?: string;
-  last_name?: string;
-  role: UserRole;
-  member_id?: string | null;
-  account_status?: string | null;
-  has_seen_onboarding?: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-interface AuthContextType {
-  user: User | null;
-  session: Session | null;
-  profile: Profile | null;
-  loading: boolean;
-  signUp: (email: string, password: string, firstName?: string, lastName?: string, memberId?: string) => Promise<{ error: any }>;
-  signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signOut: () => Promise<{ error: any }>;
-  resetPassword: (email: string) => Promise<{ error: any }>;
-  setOnboardingSeen: () => Promise<void>;
-  isAdmin: () => boolean;
-  canManagePrograms: () => boolean;
-  canManageUsers: () => boolean;
-}
-
+export interface Profile { id: string; email: string; first_name?: string; last_name?: string; role: UserRole; member_id?: string | null; account_status?: string | null; has_seen_onboarding?: boolean; onboarding_completed?: boolean; created_at?: string; updated_at?: string; }
+interface AuthContextType { user: any | null; session: { access_token: string } | null; profile: Profile | null; loading: boolean; signUp: (email: string, password: string, firstName?: string, lastName?: string, memberId?: string) => Promise<{ error: any }>; signIn: (email: string, password: string) => Promise<{ error: any }>; signOut: () => Promise<{ error: any }>; resetPassword: (email: string) => Promise<{ error: any }>; confirmPasswordReset: (uid: string, token: string, newPassword: string) => Promise<{ error: any }>; setOnboardingSeen: () => Promise<void>; isAdmin: () => boolean; canManagePrograms: () => boolean; canManageUsers: () => boolean; }
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-}
+export function useAuth() { const context = useContext(AuthContext); if (!context) throw new Error('useAuth must be used within an AuthProvider'); return context; }
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [profile, setProfile] = useState<Profile | null>(null);
-  const [loading, setLoading] = useState(true);
-
-  useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
-        
-        if (session?.user) {
-          // Fetch user profile
-          setTimeout(() => {
-            fetchProfile(session.user.id);
-          }, 0);
-        } else {
-          setProfile(null);
-          setLoading(false);
-        }
-      }
-    );
-
-    // Check for existing session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        fetchProfile(session.user.id);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const fetchProfile = async (userId: string) => {
-    try {
-      // Fetch profile data
-      const { data: profileData, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (profileError) throw profileError;
-
-      // Fetch user role from user_roles table
-      const { data: roleData, error: roleError } = await supabase
-        .from('user_roles')
-        .select('role')
-        .eq('user_id', userId)
-        .single();
-
-      if (roleError) {
-        console.error('Error fetching role:', roleError);
-      }
-
-      // Combine profile with role
-      setProfile({
-        ...profileData,
-        role: roleData?.role || 'guest'
-      });
-    } catch (error) {
-      console.error('Error fetching profile:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const signUp = async (email: string, password: string, firstName?: string, lastName?: string, memberId?: string) => {
-    try {
-      const redirectUrl = `${window.location.origin}/`;
-      
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: redirectUrl,
-          data: {
-            first_name: firstName,
-            last_name: lastName,
-            member_id: memberId,
-          }
-        }
-      });
-      return { error };
-    } catch (err: any) {
-      if (err instanceof TypeError && err.message === 'Failed to fetch') {
-        return { error: { message: 'Network Connection Blocked: If you are using a school or managed network, a web filter (e.g., Lightspeed) may be blocking access. Try using a personal device or request your administrator to whitelist mantecascholars.org and supabase.co.' } };
-      }
-      return { error: { message: err.message || 'An unexpected error occurred.' } };
-    }
-  };
-
-  const signIn = async (email: string, password: string) => {
-    try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      });
-      return { error };
-    } catch (err: any) {
-      if (err instanceof TypeError && err.message === 'Failed to fetch') {
-        return { error: { message: 'Network Connection Blocked: If you are using a school or managed network, a web filter (e.g., Lightspeed) may be blocking access. Try using a personal device or request your administrator to whitelist mantecascholars.org and supabase.co.' } };
-      }
-      return { error: { message: err.message || 'An unexpected error occurred.' } };
-    }
-  };
-
-  const signOut = async () => {
-    const { error } = await supabase.auth.signOut();
-    return { error };
-  };
-
-  const resetPassword = async (email: string) => {
-    const redirectUrl = `${window.location.origin}/auth?reset=true`;
-    
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo: redirectUrl,
-    });
-    return { error };
-  };
-
-  const isAdmin = () => {
-    return profile?.role && ['admin_i', 'admin_ii', 'admin_iii'].includes(profile.role);
-  };
-
-  const canManagePrograms = () => {
-    return profile?.role && ['admin_ii', 'admin_iii'].includes(profile.role);
-  };
-
-  const canManageUsers = () => {
-    return profile?.role === 'admin_iii';
-  };
-
-  const setOnboardingSeen = async () => {
-    if (!user || !profile) return;
-    
-    // Optimistic update
-    setProfile(prev => prev ? { ...prev, has_seen_onboarding: true } : null);
-
-    const { error } = await supabase
-      .from('profiles')
-      .update({ has_seen_onboarding: true })
-      .eq('id', user.id);
-      
-    if (error) {
-      console.error('Error updating onboarding status:', error);
-      // Revert if failed (optional, but good practice usually)
-    }
-  };
-
-  const value = {
-    user,
-    session,
-    profile,
-    loading,
-    signUp,
-    signIn,
-    signOut,
-    resetPassword,
-    isAdmin,
-    canManagePrograms,
-    canManageUsers,
-    setOnboardingSeen
-  };
-
+  const [user, setUser] = useState<any | null>(null); const [profile, setProfile] = useState<Profile | null>(null); const [session, setSession] = useState<{ access_token: string } | null>(null); const [loading, setLoading] = useState(true);
+  const loadUser = async () => { const token = localStorage.getItem('accessToken'); if (!token) return; const data = await api.get('/users/me/'); setUser(data); setProfile(data); setSession({ access_token: token }); };
+  useEffect(() => { loadUser().catch(() => { localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); }).finally(() => setLoading(false)); }, []);
+  const signIn = async (email: string, password: string) => { try { const tokens = await api.post('/users/login/', { email, password }); localStorage.setItem('accessToken', tokens.access); localStorage.setItem('refreshToken', tokens.refresh); const data = await api.get('/users/me/'); setUser(data); setProfile(data); setSession({ access_token: tokens.access }); return { error: null }; } catch (error: any) { return { error }; } };
+  const signUp = async (email: string, password: string, firstName = '', lastName = '', memberId?: string) => { try { await api.post('/users/register/', { email, password, username: email, first_name: firstName, last_name: lastName, member_id: memberId || null }); return { error: null }; } catch (error: any) { return { error }; } };
+  const resetPassword = async (email: string) => { try { await api.post('/users/reset-password/', { email }); return { error: null }; } catch (error: any) { return { error }; } };
+  const confirmPasswordReset = async (uid: string, token: string, newPassword: string) => { try { await api.post('/users/reset-password-confirm/', { uid, token, new_password: newPassword }); return { error: null }; } catch (error: any) { return { error }; } };
+  const signOut = async () => { localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); setUser(null); setProfile(null); setSession(null); return { error: null }; };
+  const setOnboardingSeen = async () => { if (!user || !profile) return; localStorage.setItem(onboardingStorageKey(user.id, profile.role), ONBOARDING_VERSION); const data = await api.patch(`/users/${user.id}/update_profile/`, { onboarding_completed: true }); setUser(data); setProfile(data); };
+  const value = { user, session, profile, loading, signUp, signIn, signOut, resetPassword, confirmPasswordReset, setOnboardingSeen, isAdmin: () => Boolean(profile?.role?.startsWith('admin')), canManagePrograms: () => ['admin_i', 'admin_ii', 'admin_iii'].includes(profile?.role || ''), canManageUsers: () => profile?.role === 'admin_iii' };
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

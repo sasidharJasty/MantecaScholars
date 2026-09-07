@@ -14,12 +14,14 @@ import { GraduationCap } from 'lucide-react';
 const Auth = () => {
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { signIn, signUp, resetPassword, user, loading } = useAuth();
+  const { signIn, signUp, resetPassword, confirmPasswordReset, user, loading } = useAuth();
   
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState('signin');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
   
   const [formData, setFormData] = useState({
     email: '',
@@ -35,9 +37,7 @@ const Auth = () => {
       navigate('/');
     }
     
-    if (searchParams.get('reset') === 'true') {
-      setMessage('Check your email for the password reset link.');
-    }
+    if (searchParams.get('reset') === 'true') setActiveTab('reset');
   }, [user, loading, navigate, searchParams]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -123,15 +123,24 @@ const Auth = () => {
       return;
     }
 
-    const { error } = await resetPassword(formData.email);
+    const uid = searchParams.get('uid');
+    const token = searchParams.get('token');
+    if (uid && token && newPassword !== confirmNewPassword) {
+      setError('Passwords do not match');
+      setIsLoading(false);
+      return;
+    }
+    const { error } = uid && token
+      ? await confirmPasswordReset(uid, token, newPassword)
+      : await resetPassword(formData.email);
     
     if (error) {
       setError(error.message);
     } else {
-      setMessage('Check your email for the password reset link.');
+      setMessage(uid && token ? 'Your password has been reset. You can now sign in.' : 'Check your email for the password reset link.');
       toast({
         title: "Reset Email Sent",
-        description: "Check your email for the password reset link."
+        description: uid && token ? "Your password has been reset." : "Check your email for the password reset link."
       });
     }
     
@@ -302,7 +311,7 @@ const Auth = () => {
 
               <TabsContent value="reset">
                 <form onSubmit={handleResetPassword} className="space-y-4">
-                  <div>
+                  {!searchParams.get('uid') && <div>
                     <Label htmlFor="email">Email</Label>
                     <Input
                       id="email"
@@ -313,9 +322,13 @@ const Auth = () => {
                       placeholder="Enter your email address"
                       required
                     />
-                  </div>
+                  </div>}
+                  {searchParams.get('uid') && searchParams.get('token') && <>
+                    <div><Label htmlFor="newPassword">New Password</Label><Input id="newPassword" type="password" value={newPassword} onChange={e => setNewPassword(e.target.value)} minLength={8} required /></div>
+                    <div><Label htmlFor="confirmNewPassword">Confirm New Password</Label><Input id="confirmNewPassword" type="password" value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} minLength={8} required /></div>
+                  </>}
                   <Button type="submit" className="w-full" disabled={isLoading}>
-                    {isLoading ? 'Sending Reset Email...' : 'Reset Password'}
+                    {isLoading ? 'Working...' : searchParams.get('uid') ? 'Set New Password' : 'Send Reset Email'}
                   </Button>
                 </form>
               </TabsContent>

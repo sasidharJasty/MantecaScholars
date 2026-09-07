@@ -1,9 +1,16 @@
 {
   "rewrites": [
     {
+      "source": "/api/:path*",
+      "destination": "https://sj76.pythonanywhere.com/api/:path*"
+    },
+    {
       "source": "/supabase-api/:path*",
       "destination": "https://gwqxaualoakvcruxerpdh.supabase.co/:path*"
     },
-    { "source": "/(.*)", "destination": "/" }
+    {
+      "source": "/(.*)",
+      "destination": "/"
+    }
   ]
 }

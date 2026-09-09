@@ -3,17 +3,20 @@ import { api } from '@/lib/api-client';
 const endpointMap: Record<string, string> = { profiles: 'users', user_roles: 'users', programs: 'programs', events: 'events', rosters: 'rosters', chat_rooms: 'chat-rooms', chat_messages: 'chat-messages', direct_messages: 'direct-messages', admin_assignments: 'admin-assignments', website_content: 'website-content' };
 const fieldMap: Record<string, string> = { user_id: 'user', sender_id: 'sender', recipient_id: 'recipient', program_id: 'program', room_id: 'room', admin_id: 'admin' };
 const mapTable = (table: string) => endpointMap[table] || table;
-const mapField = (field: string) => fieldMap[field] || field;
+const mapField = (field: string, table?: string) => {
+  if (table === 'user_roles' && field === 'user_id') return 'id';
+  return fieldMap[field] || field;
+};
 const mapPayload = (payload: Record<string, unknown>) => Object.fromEntries(Object.entries(payload).map(([key, value]) => [mapField(key), value]));
 
 class Query<T = any> implements PromiseLike<{ data: T; error: any; count?: number }> {
   private filters: Array<[string, string, unknown]> = []; private ordering?: string; private max?: number; private body: any; private method = 'GET'; private wantSingle = false; private head = false;
   constructor(private table: string) {}
   select(_columns = '*', options: any = {}) { this.head = Boolean(options.head); return this; }
-  eq(field: string, value: unknown) { this.filters.push([mapField(field), 'eq', value]); return this; }
-  neq(field: string, value: unknown) { this.filters.push([mapField(field), 'neq', value]); return this; }
-  in(field: string, values: unknown[]) { this.filters.push([mapField(field), 'in', values]); return this; }
-  order(field: string, options: { ascending?: boolean } = {}) { this.ordering = `${mapField(field)}=${options.ascending === false ? 'desc' : 'asc'}`; return this; }
+  eq(field: string, value: unknown) { this.filters.push([mapField(field, this.table), 'eq', value]); return this; }
+  neq(field: string, value: unknown) { this.filters.push([mapField(field, this.table), 'neq', value]); return this; }
+  in(field: string, values: unknown[]) { this.filters.push([mapField(field, this.table), 'in', values]); return this; }
+  order(field: string, options: { ascending?: boolean } = {}) { this.ordering = `${mapField(field, this.table)}=${options.ascending === false ? 'desc' : 'asc'}`; return this; }
   limit(value: number) { this.max = value; return this; }
   single() { this.wantSingle = true; return this; }
   maybeSingle() { this.wantSingle = true; return this; }

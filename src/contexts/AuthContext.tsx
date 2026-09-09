@@ -12,6 +12,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<any | null>(null); const [profile, setProfile] = useState<Profile | null>(null); const [session, setSession] = useState<{ access_token: string } | null>(null); const [loading, setLoading] = useState(true);
   const loadUser = async () => { const token = localStorage.getItem('accessToken'); if (!token) return; const data = await api.get('/users/me/'); setUser(data); setProfile(data); setSession({ access_token: token }); };
   useEffect(() => { loadUser().catch(() => { localStorage.removeItem('accessToken'); localStorage.removeItem('refreshToken'); }).finally(() => setLoading(false)); }, []);
+  useEffect(() => {
+    const handleSessionExpired = () => {
+      setUser(null);
+      setProfile(null);
+      setSession(null);
+    };
+    window.addEventListener('manteca:session-expired', handleSessionExpired);
+    return () => window.removeEventListener('manteca:session-expired', handleSessionExpired);
+  }, []);
   const signIn = async (email: string, password: string) => { try { const tokens = await api.post('/users/login/', { email, password }); localStorage.setItem('accessToken', tokens.access); localStorage.setItem('refreshToken', tokens.refresh); const data = await api.get('/users/me/'); setUser(data); setProfile(data); setSession({ access_token: tokens.access }); return { error: null }; } catch (error: any) { return { error }; } };
   const signUp = async (email: string, password: string, firstName = '', lastName = '', memberId?: string) => { try { await api.post('/users/register/', { email, password, username: email, first_name: firstName, last_name: lastName, member_id: memberId || null }); return { error: null }; } catch (error: any) { return { error }; } };
   const resetPassword = async (email: string) => { try { await api.post('/users/reset-password/', { email }); return { error: null }; } catch (error: any) { return { error }; } };

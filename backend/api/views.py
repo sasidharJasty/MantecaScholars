@@ -233,6 +233,11 @@ class WebsiteContentViewSet(viewsets.ModelViewSet):
     queryset = WebsiteContent.objects.all()
     serializer_class = WebsiteContentSerializer
 
+    def get_permissions(self):
+        if self.request.method in permissions.SAFE_METHODS:
+            return [permissions.AllowAny()]
+        return [AdminRolePermission()]
+
     def get_queryset(self):
         queryset = WebsiteContent.objects.all()
         key = self.request.query_params.get('key')
@@ -249,3 +254,8 @@ class WebsiteContentViewSet(viewsets.ModelViewSet):
         )
         serializer = self.get_serializer(obj)
         return Response(serializer.data)
+
+
+class AdminRolePermission(permissions.BasePermission):
+    def has_permission(self, request, view):
+        return bool(request.user and request.user.is_authenticated and request.user.role.startswith('admin'))

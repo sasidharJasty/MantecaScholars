@@ -54,10 +54,35 @@ class DjangoApiIntegrationTests(APITestCase):
         dm = self.client.post('/api/direct-messages/', {'recipient': self.admin.id, 'content': 'Hello admin'}, format='json')
         self.assertEqual(dm.status_code, status.HTTP_201_CREATED, dm.data)
         self.assertEqual(self.client.get('/api/direct-messages/').status_code, status.HTTP_200_OK)
+        self.client.credentials()
+        admin_login = self.client.post('/api/users/login/', {
+            'email': self.admin.email, 'password': self.password
+        }, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {admin_login.data['access']}")
         content = self.client.post('/api/website-content/', {'key': 'home_news', 'content': [{'title': 'Test'}]}, format='json')
         self.assertEqual(content.status_code, status.HTTP_200_OK)
         fetched = self.client.get('/api/website-content/?key=home_news')
         self.assertEqual(fetched.data[0]['content'][0]['title'], 'Test')
+
+    def test_website_content_is_public_but_writes_require_admin(self):
+        public_read = self.client.get('/api/website-content/?key=home_news')
+        self.assertEqual(public_read.status_code, status.HTTP_200_OK)
+
+        self.authenticate()
+        student_write = self.client.post('/api/website-content/', {
+            'key': 'student_news', 'content': []
+        }, format='json')
+        self.assertEqual(student_write.status_code, status.HTTP_403_FORBIDDEN)
+
+        self.client.credentials()
+        admin_login = self.client.post('/api/users/login/', {
+            'email': self.admin.email, 'password': self.password
+        }, format='json')
+        self.client.credentials(HTTP_AUTHORIZATION=f"Bearer {admin_login.data['access']}")
+        admin_write = self.client.post('/api/website-content/', {
+            'key': 'admin_news', 'content': []
+        }, format='json')
+        self.assertEqual(admin_write.status_code, status.HTTP_200_OK)
 
     def test_unauthenticated_api_is_protected(self):
         self.assertEqual(self.client.get('/api/programs/').status_code, status.HTTP_401_UNAUTHORIZED)

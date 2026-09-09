@@ -128,9 +128,15 @@ const ProgramChat = ({ programId, programName, canModerate }: ProgramChatProps) 
     };
   }, [roomId, programId]);
 
-  const initializeChat = async () => {
+  useEffect(() => {
+    if (!roomId) return;
+    const pollingId = window.setInterval(() => initializeChat(true), 4000);
+    return () => window.clearInterval(pollingId);
+  }, [roomId, programId]);
+
+  const initializeChat = async (isRefresh = false) => {
     try {
-      setLoading(true);
+      if (!isRefresh) setLoading(true);
 
       // Get or create chat room for this program
       let { data: room } = await supabase
@@ -211,7 +217,7 @@ const ProgramChat = ({ programId, programName, canModerate }: ProgramChatProps) 
         variant: "destructive"
       });
     } finally {
-      setLoading(false);
+      if (!isRefresh) setLoading(false);
     }
   };
 

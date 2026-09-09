@@ -56,6 +56,12 @@ const AdminChat = () => {
      fetchChatMembers();
   }, [user, profile]);
 
+    useEffect(() => {
+        if (!roomId) return;
+        const pollingId = window.setInterval(() => fetchMessages(roomId), 4000);
+        return () => window.clearInterval(pollingId);
+    }, [roomId]);
+
   const fetchChatMembers = async () => {
       const { data } = await supabase
         .from('profiles')

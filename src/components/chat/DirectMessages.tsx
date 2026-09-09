@@ -64,6 +64,15 @@ const DirectMessages = ({ preselectedUserId }: DirectMessagesProps) => {
     }
   }, [selectedUser, user]);
 
+  useEffect(() => {
+    if (!user) return;
+    const pollingId = window.setInterval(() => {
+      fetchConversations();
+      if (selectedUser) fetchMessages(selectedUser.id);
+    }, 4000);
+    return () => window.clearInterval(pollingId);
+  }, [user, selectedUser]);
+
   const setupRealtimeSubscription = () => {
     const channel = supabase
       .channel('direct-messages')

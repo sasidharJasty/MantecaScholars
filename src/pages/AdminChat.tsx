@@ -341,7 +341,7 @@ const AdminChat = () => {
                                         </button>
 
                                         {/* Delete Button (Red X for Admin own messages) */}
-                                        {isMe && (
+                                        {(isMe || profile?.role === 'admin_iii') && (
                                             <AlertDialog>
                                                 <AlertDialogTrigger asChild>
                                                     <button 

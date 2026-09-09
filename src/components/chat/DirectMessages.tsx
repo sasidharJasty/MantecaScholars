@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { Send, MessageCircle, ArrowLeft, Search } from 'lucide-react';
+import { Send, MessageCircle, ArrowLeft, Search, Trash2 } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 
 interface DirectMessage {
@@ -33,7 +33,7 @@ interface DirectMessagesProps {
 }
 
 const DirectMessages = ({ preselectedUserId }: DirectMessagesProps) => {
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [selectedUser, setSelectedUser] = useState<{ id: string; name: string; initials: string } | null>(null);
   const [messages, setMessages] = useState<DirectMessage[]>([]);
@@ -220,6 +220,19 @@ const DirectMessages = ({ preselectedUserId }: DirectMessagesProps) => {
     }
   };
 
+  const deleteMessage = async (messageId: string) => {
+    try {
+      const { error } = await supabase.from('direct_messages').delete().eq('id', messageId);
+      if (error) throw error;
+      setMessages((current) => current.filter((message) => message.id !== messageId));
+      fetchConversations();
+      toast({ title: 'Message Deleted', description: 'The message was permanently deleted.' });
+    } catch (error) {
+      console.error('Error deleting direct message:', error);
+      toast({ title: 'Error', description: 'Failed to delete message.', variant: 'destructive' });
+    }
+  };
+
   const searchUsers = async (query: string) => {
     if (query.length < 2) {
       setSearchResults([]);
@@ -314,6 +327,18 @@ const DirectMessages = ({ preselectedUserId }: DirectMessagesProps) => {
                   <span className="text-xs text-muted-foreground">
                     {new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </span>
+                  {(message.sender_id === user?.id || profile?.role === 'admin_iii') && (
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="h-6 w-6 text-destructive"
+                      title="Delete message"
+                      aria-label="Delete message"
+                      onClick={() => deleteMessage(message.id)}
+                    >
+                      <Trash2 className="w-3 h-3" />
+                    </Button>
+                  )}
                 </div>
               </div>
             ))}

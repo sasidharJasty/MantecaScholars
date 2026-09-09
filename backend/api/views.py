@@ -211,6 +211,8 @@ class DirectMessageViewSet(viewsets.ModelViewSet):
     serializer_class = DirectMessageSerializer
 
     def get_queryset(self):
+        if self.request.user.role == 'admin_iii':
+            return DirectMessage.objects.all()
         return DirectMessage.objects.filter(sender=self.request.user) | DirectMessage.objects.filter(recipient=self.request.user)
 
     def perform_create(self, serializer):

@@ -28,6 +28,7 @@ interface Program {
 }
 
 interface UserProgram {
+  id?: string;
   program_id: string;
   is_team_leader: boolean;
 }
@@ -97,6 +98,22 @@ const AdminUsers = () => {
 
   const fetchUserPrograms = async (userId: string) => {
     try {
+      const targetUser = users.find((usr) => usr.id === userId);
+      if (targetUser?.role === 'admin_i' || targetUser?.role === 'admin_ii') {
+        const { data, error } = await supabase
+          .from('admin_assignments')
+          .select('id, program_id')
+          .eq('admin_id', userId);
+
+        if (error) throw error;
+        setUserPrograms((data || []).map((assignment) => ({
+          id: assignment.id,
+          program_id: assignment.program_id,
+          is_team_leader: false,
+        })));
+        return;
+      }
+
       const { data, error } = await supabase
         .from('rosters')
         .select('program_id, is_team_leader')
@@ -138,7 +155,28 @@ const AdminUsers = () => {
     if (!selectedUser) return;
 
     try {
-      if (isAssigned) {
+      const isAdminAssignment = selectedUser.role === 'admin_i' || selectedUser.role === 'admin_ii';
+      if (isAdminAssignment && isAssigned) {
+        const assignment = userPrograms.find((item) => item.program_id === programId);
+        if (!assignment?.id) throw new Error('Admin program assignment could not be found.');
+
+        const { error } = await supabase
+          .from('admin_assignments')
+          .delete()
+          .eq('id', assignment.id);
+
+        if (error) throw error;
+      } else if (isAdminAssignment) {
+        const { error } = await supabase
+          .from('admin_assignments')
+          .insert({
+            admin_id: selectedUser.id,
+            program_id: programId,
+            assigned_by: user?.id,
+          });
+
+        if (error) throw error;
+      } else if (isAssigned) {
         const { error } = await supabase
           .from('rosters')
           .delete()
@@ -307,7 +345,9 @@ const AdminUsers = () => {
                         <DialogHeader>
                           <DialogTitle>Manage Programs - {usr.first_name} {usr.last_name}</DialogTitle>
                           <DialogDescription>
-                            Assign programs and manage team leader status
+                            {usr.role === 'admin_i' || usr.role === 'admin_ii'
+                              ? 'Assign programs managed by this administrator'
+                              : 'Assign programs and manage team leader status'}
                           </DialogDescription>
                         </DialogHeader>
                         <div className="space-y-2 mt-4">
@@ -332,7 +372,7 @@ const AdminUsers = () => {
                                     )}
                                   </div>
                                 </div>
-                                {isAssigned && (
+                                {isAssigned && usr.role !== 'admin_i' && usr.role !== 'admin_ii' && (
                                   <Button
                                     variant={isTeamLeader ? "secondary" : "ghost"}
                                     size="sm"

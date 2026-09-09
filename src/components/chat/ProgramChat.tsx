@@ -182,9 +182,15 @@ const ProgramChat = ({ programId, programName, canModerate }: ProgramChatProps) 
         .eq('program_id', programId)
         .in('user_id', senderIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
-      const roleMap = new Map(roles?.map(r => [r.user_id, r.role]) || []);
-      const leaderMap = new Map(teamLeaders?.map(t => [t.user_id, t.is_team_leader]) || []);
+      const profileMap = new Map<string, { first_name?: string | null; last_name?: string | null }>(
+        (profiles as Array<{ id: string; first_name?: string | null; last_name?: string | null }> | null)?.map((profile) => [profile.id, profile]) || [],
+      );
+      const roleMap = new Map<string, string>(
+        (roles as Array<{ user_id: string; role: string }> | null)?.map((role) => [role.user_id, role.role]) || [],
+      );
+      const leaderMap = new Map<string, boolean>(
+        (teamLeaders as Array<{ user_id: string; is_team_leader: boolean }> | null)?.map((leader) => [leader.user_id, leader.is_team_leader]) || [],
+      );
 
       const formattedMessages: ChatMessage[] = messagesData?.map(m => {
         const sender = profileMap.get(m.sender_id);

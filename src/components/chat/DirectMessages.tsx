@@ -112,7 +112,6 @@ const DirectMessages = ({ preselectedUserId }: DirectMessagesProps) => {
       const { data: allMessages, error } = await supabase
         .from('direct_messages')
         .select('*')
-        .or(`sender_id.eq.${user?.id},recipient_id.eq.${user?.id}`)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -140,7 +139,9 @@ const DirectMessages = ({ preselectedUserId }: DirectMessagesProps) => {
         .select('id, first_name, last_name')
         .in('id', partnerIds);
 
-      const profileMap = new Map(profiles?.map(p => [p.id, p]) || []);
+      const profileMap = new Map<string, { first_name?: string | null; last_name?: string | null }>(
+        (profiles as Array<{ id: string; first_name?: string | null; last_name?: string | null }> | null)?.map((profile) => [profile.id, profile]) || [],
+      );
 
       const convos: Conversation[] = partnerIds.map(partnerId => {
         const msgs = conversationMap.get(partnerId)!;
@@ -194,11 +195,13 @@ const DirectMessages = ({ preselectedUserId }: DirectMessagesProps) => {
       const { data, error } = await supabase
         .from('direct_messages')
         .select('*')
-        .or(`and(sender_id.eq.${user?.id},recipient_id.eq.${partnerId}),and(sender_id.eq.${partnerId},recipient_id.eq.${user?.id})`)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
-      setMessages(data || []);
+      setMessages((data || []).filter((message) =>
+        (message.sender_id === user?.id && message.recipient_id === partnerId) ||
+        (message.sender_id === partnerId && message.recipient_id === user?.id),
+      ));
 
       setTimeout(() => {
         scrollRef.current?.scrollIntoView({ behavior: 'smooth' });
@@ -243,13 +246,13 @@ const DirectMessages = ({ preselectedUserId }: DirectMessagesProps) => {
       const { data, error } = await supabase
         .from('profiles')
         .select('id, first_name, last_name')
-        .or(`first_name.ilike.%${query}%,last_name.ilike.%${query}%`)
-        .neq('id', user?.id)
-        .limit(10);
-
+        .neq('id', user?.id);
       if (error) throw error;
 
-      setSearchResults(data?.map(p => ({
+      const searchProfiles = (data || []).filter((profile) =>
+        `${profile.first_name || ''} ${profile.last_name || ''}`.toLowerCase().includes(query.toLowerCase()),
+      ).slice(0, 10);
+      setSearchResults(searchProfiles.map(p => ({
         id: p.id,
         name: `${p.first_name || ''} ${p.last_name || ''}`.trim() || 'Unknown',
         initials: `${p.first_name?.[0] || ''}${p.last_name?.[0] || ''}` || '?'

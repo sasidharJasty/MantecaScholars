@@ -37,7 +37,15 @@ class Query<T = any> implements PromiseLike<{ data: T; error: any; count?: numbe
   }
 }
 
-export const supabase = { from: (table: string) => new Query(table), removeChannel: (_channel: unknown) => undefined, channel: (_name: string) => ({ on: () => ({ on: () => ({ subscribe: () => ({}) }) }), subscribe: () => ({}) }), auth: {
+const createChannel = () => {
+  const channel = {
+    on: (..._args: unknown[]) => channel,
+    subscribe: () => channel,
+  };
+  return channel;
+};
+
+export const supabase = { from: (table: string) => new Query(table), removeChannel: (_channel: unknown) => undefined, channel: (_name: string) => createChannel(), auth: {
   onAuthStateChange: (_callback: unknown) => ({ data: { subscription: { unsubscribe: () => undefined } } }), getSession: async () => ({ data: { session: null } }),
   signUp: async ({ email, password, options }: any) => { try { await api.post('/users/register/', { email, password, username: email, ...options?.data }); return { error: null }; } catch (error) { return { error }; } },
   signInWithPassword: async ({ email, password }: any) => { try { const data = await api.post('/users/login/', { email, password }); localStorage.setItem('accessToken', data.access); localStorage.setItem('refreshToken', data.refresh); return { error: null }; } catch (error) { return { error }; } },

@@ -46,7 +46,8 @@ const AdminProgramsManagement = () => {
   const [announceContent, setAnnounceContent] = useState('');
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== 'admin_i')) {
+    const canAccess = profile?.role === 'admin_i' || profile?.role === 'admin_iii';
+    if (!loading && (!user || !canAccess)) {
       toast({
         title: "Access Denied",
         description: "This page is strictly for Program Managers (Admin I).",
@@ -56,7 +57,7 @@ const AdminProgramsManagement = () => {
       return;
     }
 
-    if (user && profile?.role === 'admin_i') {
+    if (user && canAccess) {
       fetchAssignedPrograms();
     }
   }, [user, profile, loading, navigate]);
@@ -65,26 +66,31 @@ const AdminProgramsManagement = () => {
     try {
       setLoadingPrograms(true);
       
-      // 1. Get assigned program IDs
-      const { data: assignments, error: assignmentError } = await supabase
-        .from('admin_assignments')
-        .select('program_id')
-        .eq('admin_id', user?.id || '');
+      let programsData;
+      if (profile?.role === 'admin_iii') {
+        const { data, error } = await supabase.from('programs').select('*').order('name');
+        if (error) throw error;
+        programsData = data;
+      } else {
+        const { data: assignments, error: assignmentError } = await supabase
+          .from('admin_assignments')
+          .select('program_id')
+          .eq('admin_id', user?.id || '');
+        if (assignmentError) throw assignmentError;
 
-      if (assignmentError) throw assignmentError;
+        const programIds = assignments?.map(a => a.program_id) || [];
+        if (programIds.length === 0) {
+          setPrograms([]);
+          return;
+        }
 
-      const programIds = assignments?.map(a => a.program_id) || [];
-
-      if (programIds.length === 0) {
-        setPrograms([]);
-        return;
+        const { data, error: programsError } = await supabase
+          .from('programs')
+          .select('*')
+          .in('id', programIds);
+        if (programsError) throw programsError;
+        programsData = data;
       }
-
-      // 2. Get details for these programs
-      const { data: programsData, error: programsError } = await supabase
-        .from('programs')
-        .select('*')
-        .in('id', programIds);
 
       if (programsError) throw programsError;
 

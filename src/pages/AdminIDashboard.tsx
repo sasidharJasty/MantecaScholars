@@ -24,7 +24,8 @@ const AdminIDashboard = () => {
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== 'admin_i')) {
+    const canAccess = profile?.role === 'admin_i' || profile?.role === 'admin_iii';
+    if (!loading && (!user || !canAccess)) {
       toast({
         title: "Access Denied",
         description: "You need Admin Level I privileges to access this page.",
@@ -34,7 +35,7 @@ const AdminIDashboard = () => {
       return;
     }
 
-    if (user && profile?.role === 'admin_i') {
+    if (user && canAccess) {
       fetchStats();
     }
   }, [user, profile, loading, navigate]);
@@ -47,10 +48,12 @@ const AdminIDashboard = () => {
         .from('programs')
         .select('*', { count: 'exact', head: true });
 
-      const { count: assignedCount } = await supabase
-        .from('admin_assignments')
-        .select('*', { count: 'exact', head: true })
-        .eq('admin_id', user?.id);
+      const assignedCount = profile?.role === 'admin_iii'
+        ? programsCount
+        : (await supabase
+          .from('admin_assignments')
+          .select('*', { count: 'exact', head: true })
+          .eq('admin_id', user?.id)).count;
 
       setStats({
         totalPrograms: programsCount || 0,

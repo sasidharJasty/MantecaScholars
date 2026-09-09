@@ -100,7 +100,7 @@ export function AppSidebar() {
                 </SidebarMenuItem>
                 
                 {/* Specific Dashboard Levels */}
-                {profile?.role === 'admin_i' && (
+                {(profile?.role === 'admin_i' || profile?.role === 'admin_iii') && (
                    <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin/level-i")}>
                       <Link to="/admin/level-i">
@@ -110,7 +110,7 @@ export function AppSidebar() {
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 )}
-                {profile?.role === 'admin_ii' && (
+                {(profile?.role === 'admin_ii' || profile?.role === 'admin_iii') && (
                    <SidebarMenuItem>
                     <SidebarMenuButton asChild isActive={isActive("/admin/level-ii")}>
                       <Link to="/admin/level-ii">

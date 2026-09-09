@@ -24,7 +24,8 @@ const AdminIIDashboard = () => {
   const [loadingStats, setLoadingStats] = useState(true);
 
   useEffect(() => {
-    if (!loading && (!user || profile?.role !== 'admin_ii')) {
+    const canAccess = profile?.role === 'admin_ii' || profile?.role === 'admin_iii';
+    if (!loading && (!user || !canAccess)) {
       toast({
         title: "Access Denied",
         description: "You need Admin Level II privileges to access this page.",
@@ -34,7 +35,7 @@ const AdminIIDashboard = () => {
       return;
     }
 
-    if (user && profile?.role === 'admin_ii') {
+    if (user && canAccess) {
       fetchStats();
     }
   }, [user, profile, loading, navigate]);

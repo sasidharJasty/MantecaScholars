@@ -60,7 +60,9 @@ const AdminDashboard = () => {
         .select('*', { count: 'exact', head: true });
 
       let assignedCount = 0;
-      if (profile?.role === 'admin_i') {
+      if (profile?.role === 'admin_iii') {
+        assignedCount = programsCount || 0;
+      } else if (profile?.role === 'admin_i') {
         const { count } = await supabase
           .from('admin_assignments')
           .select('*', { count: 'exact', head: true })

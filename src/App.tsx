@@ -21,6 +21,7 @@ import AdminPrograms from "./pages/AdminPrograms";
 import AdminApprovals from "./pages/AdminApprovals";
 import AdminUsers from "./pages/AdminUsers";
 import AdminProgramsManagement from "./pages/AdminProgramsManagement";
+import AdminProgramManage from "./pages/AdminProgramManage";
 import AdminWebsiteContent from "./pages/AdminWebsiteContent";
 import TeamLeaderDashboard from "./pages/TeamLeaderDashboard";
 import ProgramSelection from "./pages/ProgramSelection";
@@ -54,6 +55,7 @@ const App = () => (
             <Route path="/admin/level-ii" element={<AdminIIDashboard />} />
             <Route path="/admin/level-iii" element={<AdminIIIDashboard />} />
             <Route path="/admin/programs" element={<AdminPrograms />} />
+            <Route path="/admin/programs/:programId/manage" element={<AdminProgramManage />} />
             <Route
               path="/admin/my-programs"
               element={<AdminProgramsManagement />}

@@ -186,7 +186,7 @@ const ProgramDetail = () => {
               <p className="text-xl text-muted-foreground">{program.description}</p>
             </div>
             {canManage && (
-              <Button onClick={() => navigate(`/admin/programs/${program.id}/manage`)}>
+              <Button onClick={() => navigate(profile?.role === 'admin_iii' ? `/admin/programs/${program.id}/manage` : '/admin/my-programs')}>
                 Manage Program
               </Button>
             )}

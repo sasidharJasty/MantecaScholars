@@ -355,6 +355,12 @@ const AdminPrograms = () => {
                   </a>
                   
                   <div className="flex gap-2 border-t pt-4">
+                    {profile?.role === 'admin_iii' && (
+                      <Button variant="secondary" size="sm" className="flex-1" onClick={() => navigate(`/admin/programs/${program.id}/manage`)}>
+                        <Users className="w-4 h-4 mr-1" />
+                        Assign Leads
+                      </Button>
+                    )}
                     <Dialog open={editingProgram?.id === program.id} onOpenChange={(open) => {
                       if (!open) setEditingProgram(null);
                     }}>

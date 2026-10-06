@@ -1,15 +1,42 @@
 {
-  "routes": [
+  "services": {
+    "frontend": {
+      "root": "frontend",
+      "rewrites": [
+        {
+          "source": "/(.*)",
+          "destination": "/index.html"
+        }
+      ]
+    },
+    "backend": {
+      "root": "backend"
+    }
+  },
+  "rewrites": [
     {
-      "src": "/api/(.*)",
-      "dest": "https://sj76.pythonanywhere.com/api/$1"
+      "source": "/api/(.*)",
+      "destination": {
+        "service": "backend"
+      }
     },
     {
-      "handle": "filesystem"
+      "source": "/admin/(.*)",
+      "destination": {
+        "service": "backend"
+      }
     },
     {
-      "src": "/.*",
-      "dest": "/index.html"
+      "source": "/static/(.*)",
+      "destination": {
+        "service": "backend"
+      }
+    },
+    {
+      "source": "/(.*)",
+      "destination": {
+        "service": "frontend"
+      }
     }
   ]
 }

@@ -17,6 +17,10 @@ backend/**/__pycache__/
 backend/.DS_Store
 backend/**/.DS_Store
 
+
+
+frontend/.env
+backend/data.json
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
